@@ -553,12 +553,20 @@ const server = app.listen(port, () => {
 });
 
 // schedule to ping Heroku every 15min except 00:00 to 06:00
+const schedulerHost = process.env.SCHEDULER_HOST;
 const rule = new Schedule.RecurrenceRule();
 rule.hour = [0, new Schedule.Range(5, 23)];
 rule.minute = [0, 15, 30, 45];
 
 const job = Schedule.scheduleJob(rule, () => {
   Request(`http://${host}`)
-    .then(() => console.log(`Ping ${host} at ${Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour')}`))
+    .then(() => console.log(`Ping ${host} at ${Moment()}`))
+    .catch(err => console.log(err));
+});
+
+// schedule to wakeUp the scheduler
+const job2 = Schedule.scheduleJob('* * 21 * * *', () => {
+  Request(`http://${schedulerHost}`)
+    .then(() => console.log(`Ping ${schedulerHost} at ${Moment()}`))
     .catch(err => console.log(err));
 });
