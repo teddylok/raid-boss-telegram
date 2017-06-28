@@ -13,8 +13,13 @@ import { GroupInstance } from './models/entity/group';
 import { Pokedex, Pokemon } from './domain/pokedex';
 import { Locale } from './locale';
 import { Team } from './domain/team';
+import * as Express from 'express';
 
-const util = require('util');
+const app = Express();
+
+app.get('/', (req, res) => {
+  res.send('Raid Boss Bot is up.');
+});
 
 const host = process.env.HOST;
 const port = process.env.PORT || 8443;
@@ -535,4 +540,6 @@ function joinBoss(msg: any, bossId: number) {
     .catch(err => console.log(err));
 }
 
-console.log(`${Emoji.get('robot_face')}  Hi! I am up`);
+const server = app.listen(port, () => {
+  console.log(`${Emoji.get('robot_face')}  Hi! I am up ${host}:${port}`);
+});
