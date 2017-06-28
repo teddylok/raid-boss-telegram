@@ -54,7 +54,7 @@ export class Channel {
   }
 
   getCurrentTime() {
-    return Moment().subtract(process.env.TIMEZONE_OFFSET || 0, 'hour');
+    return Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour');
   }
 
   toString(description: string) {
