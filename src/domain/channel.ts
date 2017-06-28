@@ -34,23 +34,27 @@ export class Channel {
   }
 
   getCompletedBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment() > Moment(boss.start).add(1, 'hour')), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => this.getCurrentTime() > Moment(boss.start).add(1, 'hour')), ['start', 'bossId']);
   }
 
   getBattleBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Moment() && Moment() > Moment(boss.start)), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= this.getCurrentTime() && this.getCurrentTime() > Moment(boss.start)), ['start', 'bossId']);
   }
 
   getPendingBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start) >= Moment()), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start) >= this.getCurrentTime()), ['start', 'bossId']);
   }
 
   getUpcomingBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Moment()), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= this.getCurrentTime()), ['start', 'bossId']);
   }
 
   getBattleAndCompletedBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment() > Moment(boss.start)), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => this.getCurrentTime() > Moment(boss.start)), ['start', 'bossId']);
+  }
+
+  getCurrentTime() {
+    return Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour');
   }
 
   toString(description: string) {
