@@ -1,0 +1,10 @@
+{
+  "database": {
+    "database": "dbh4ohst2l8q1g",
+    "username": "fqlmtwjhsdvcom",
+    "password": "5d19cb1301a73822b795add582c1a24aa23a4cc1b84f9d77e800d273200e4b1d",
+    "host": "ec2-54-225-68-71.compute-1.amazonaws.com",
+    "port": 5432,
+    "dialect": "postgres"
+  }
+}

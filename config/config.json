@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "raidboss",
+    "password": "bot",
+    "database": "raidbossbot",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "raidboss",
+    "password": "bot",
+    "database": "raidbossbot",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "",
+    "password": "",
+    "database": "",
+    "host": "",
+    "dialect": "postgres"
+  }
+}

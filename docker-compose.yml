@@ -1,0 +1,13 @@
+version: '2'
+services:
+  db:
+    container_name: db
+    image: postgres
+    volumes:
+      - /tmp/data/raidbossbot:/var/lib/postgresql/data
+    ports:
+      - 5432:5432/tcp
+    environment:
+      POSTGRES_PASSWORD: bot
+      POSTGRES_USER: raidboss
+      POSTGRES_DB: raidbossbot
