@@ -559,6 +559,6 @@ rule.minute = [0, 15, 30, 45];
 
 const job = Schedule.scheduleJob(rule, () => {
   Request(`http://${host}`)
-    .then(() => console.log(`Ping ${host} at ${Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour')}`))
+    .then(() => console.log(`Ping ${host} at ${Moment().subtract(process.env.TIMEZONE_OFFSET || 0, 'hour')}`))
     .catch(err => console.log(err));
 });
