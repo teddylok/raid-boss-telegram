@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
 });
 
 const host = process.env.HOST;
-const port = process.env.PORT || 8443;
+const port = process.env.PORT || 80;
 const token = process.env.BOT_TOKEN;
 const locales = [Locale.EN_US, Locale.JA_JP, Locale.ZH_CN, Locale.ZH_HK];
 const channels = [];
