@@ -255,10 +255,10 @@ bot.on('callback_query', (msg) => {
         pos++;
       });
 
-      bot.sendMessage(channel.id, message, {
+      bot.editMessageText(message, {
         reply_markup: JSON.stringify({ inline_keyboard: key }),
         chat_id: channelId,
-        message_id: msg.message_id
+        message_id: msg.message.message_id
       });
       break;
     case 'TEAM':
