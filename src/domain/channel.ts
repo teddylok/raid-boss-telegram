@@ -6,11 +6,11 @@ import * as i18n from 'i18next';
 
 export class Channel {
   bot: any;
-  id: number;
+  id: string;
   name: string;
   boss: Boss[];
 
-  constructor(bot: any, id: number, name: string) {
+  constructor(bot: any, id: string, name: string) {
     this.bot = bot;
     this.id = id;
     this.name = name;

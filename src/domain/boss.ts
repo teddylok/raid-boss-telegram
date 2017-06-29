@@ -11,7 +11,7 @@ export class Boss {
   id: number;
   bossId: number;
   bot: any;
-  channelId: number;
+  channelId: string;
   location: string;
   name: string;
   pokemonId: number;
@@ -19,7 +19,7 @@ export class Boss {
   start: Date;
   groups: Group[];
 
-  constructor(bot: any, pokedex: Pokedex, id: number, channelId: number, bossId: number, start: Date, location: string) {
+  constructor(bot: any, pokedex: Pokedex, id: number, channelId: string, bossId: number, start: Date, location: string) {
     this.id = id;
     this.bot = bot;
     this.bossId = bossId;
@@ -75,7 +75,7 @@ export class Boss {
     return flag;
   }
 
-  removeUserInGroup(userId: number) {
+  removeUserInGroup(userId: string) {
     _.map(this.groups, group => {
       group.users = _.filter(group.users, user => user.id !== userId);
     });

@@ -2,7 +2,7 @@ import * as Emoji from 'node-emoji';
 import * as _ from 'lodash';
 
 export class User {
-  id: number;
+  id: string;
   bot: any;
   firstName: string;
   lastName: string;

@@ -45,7 +45,8 @@ loadDataFromDatabase();
 
 // bot listener
 bot.onText(/\/start/, (msg) => {
-  if (msg.chat.type !== 'group') {
+  console.log(msg);
+  if (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup') {
     bot.sendMessage(
       msg.chat.id,
       `${Emoji.get('no_entry_sign')}  ${i18n.t('botOnlySupportGroupChat')}`
@@ -56,24 +57,23 @@ bot.onText(/\/start/, (msg) => {
   const name = msg.chat.title;
 
   // validation and make sure one channel is unique
-  if (_.find(channels, (channel) => channel.id === id)) {
+  if (getChannel(id)) {
     bot.sendMessage(
       msg.chat.id,
       `${Emoji.get('no_entry_sign')}  ${i18n.t('botHasBeenRegistered')}`
     );
-    return;
+  } else {
+    Models.Channel
+      .findById(id)
+      .then(channel => (channel) ? channel : Models.Channel.create({
+        id,
+        name
+      }))
+      .then(channel => channels.push(new Channel(bot, channel.id, channel.name)))
+      .catch(err => console.log(err));
+
+    bot.sendMessage(msg.chat.id, `${Emoji.get('white_check_mark')}  ${i18n.t('botRegistered')}`);
   }
-
-  Models.Channel
-    .findById(id)
-    .then(channel => (channel) ? channel : Models.Channel.create({
-      id,
-      name
-    }))
-    .then(channel => channels.push(new Channel(bot, channel.id, channel.name)))
-    .catch(err => console.log(err));
-
-  bot.sendMessage(msg.chat.id, `${Emoji.get('white_check_mark')}  ${i18n.t('botRegistered')}`);
 });
 
 bot.onText(/\/raid (.+)/, (msg, match) => {
@@ -124,7 +124,7 @@ bot.onText(/\/raid (\d\d:\d\d) (.+)/, (msg, match) => {
 
       return groups;
     })
-    .then((groups) => Models.Group.bulkCreate(groups, {returning: true}))
+    .then((groups) => Models.Group.bulkCreate(groups, { returning: true }))
     .then(groupInstances => {
       _.map(groupInstances, (groupInstance: any) => {
         _.find(boss.groups, group => group.seq === groupInstance.seq).id = groupInstance.id;
@@ -242,17 +242,17 @@ bot.on('callback_query', (msg) => {
       let pos = 0;
       let btnPerLine = 3;
 
+      const message = i18n.t('boss.whatIsTheBoss', {
+        bossId: match[1],
+        start: Moment(boss.start).format('HH:mm'),
+        location: boss.location
+      });
+
       _.map(level4Pokemons, (pokemon: Pokemon) => {
         let row = pos / btnPerLine | 0;
         if (!key[row]) key[row] = [];
         key[row].push({ text: pokemon.zhHkName, callback_data: `SETBOSS_${match[1]}_${pokemon.id}` });
         pos++;
-      });
-
-      const message = i18n.t('boss.whatIsTheBoss', {
-        bossId: match[1],
-        start: Moment(boss.start).format('HH:mm'),
-        location: boss.location
       });
 
       bot.sendMessage(channel.id, message, {
@@ -339,8 +339,8 @@ bot.on('callback_query', (msg) => {
 //   });
 // });
 
-function getChannel(id: number) {
-  const channel = _.find(channels, (channel) => channel.id === id);
+function getChannel(id: string) {
+  const channel = _.find(channels, (channel) => _.toString(channel.id) === _.toString(id));
 
   if (!channel) {
     askForRegistration(id);
@@ -349,8 +349,8 @@ function getChannel(id: number) {
   return channel;
 }
 
-function askForRegistration(msgId: number) {
-  return bot.sendMessage(msgId, `${Emoji.get('bomb')}  ${i18n.t('askForRegistration')}`);
+function askForRegistration(channelId: string) {
+  return bot.sendMessage(channelId, `${Emoji.get('bomb')}  ${i18n.t('askForRegistration')}`);
 }
 
 function loadDataFromDatabase() {
@@ -469,7 +469,7 @@ function getUser(from) {
 function getUserDomainObject(instance: UserInstance) {
   const user = new User(bot);
 
-  user.id = instance.id;
+  user.id = _.toString(instance.id);
   user.firstName = instance.first_name;
   user.lastName = instance.last_name;
   user.username = instance.username;
@@ -518,6 +518,8 @@ function setTeam(from, teamId: number) {
 }
 
 function joinBoss(msg: any, bossId: number) {
+  console.log(msg);
+
   const channel = getChannel(msg.message.chat.id);
   const boss = channel.getBossByBossId(bossId);
 
@@ -544,6 +546,12 @@ function joinBoss(msg: any, bossId: number) {
     }))
     .then((instance: GroupInstance) => instance.addUser(userInstance))
     .then(() => group.addUser(getUserDomainObject(userInstance)))
+    // .then(() => {
+    //   bot.editMessageText(boss.toString(), {
+    //     chat_id: channel.id,
+    //     message_id: msg.message.message_id
+    //   });
+    // })
     .then(() => bot.sendMessage(channel.id, i18n.t('boss.joined', { name: userInstance.first_name, start: Moment(boss.start).format('HH:mm'), location : boss.location, bossName: boss.getEmojiName() })))
     .catch(err => console.log(err));
 }

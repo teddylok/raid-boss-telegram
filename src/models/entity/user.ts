@@ -22,7 +22,7 @@ export interface UserModel extends Sequelize.Model<UserInstance, UserAttribute> 
 
 export function defineUser<UserInstance, UserAttribute>(sequelize: SequelizeInterface) {
   const User = sequelize.define('User', {
-    id: { type: Sequelize.INTEGER, primaryKey: true },
+    id: { type: Sequelize.BIGINT, primaryKey: true },
     created_at: { type: Sequelize.DATE, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'), allowNull: false },
     updated_at: { type: Sequelize.DATE },
     deleted_at: { type: Sequelize.DATE },

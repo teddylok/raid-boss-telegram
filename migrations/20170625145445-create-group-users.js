@@ -8,7 +8,7 @@ module.exports = {
       updated_at: { type: Sequelize.DATE },
       deleted_at: { type: Sequelize.DATE },
       group_id: { type: Sequelize.INTEGER, allowNull: false },
-      user_id: { type: Sequelize.INTEGER, allowNull: false }
+      user_id: { type: Sequelize.BIGINT, allowNull: false }
     });
   },
 

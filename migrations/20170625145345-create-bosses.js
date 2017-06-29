@@ -7,7 +7,7 @@ module.exports = {
       created_at: { type: Sequelize.DATE, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'), allowNull: false },
       updated_at: { type: Sequelize.DATE },
       deleted_at: { type: Sequelize.DATE },
-      channel_id: { type: Sequelize.INTEGER },
+      channel_id: { type: Sequelize.BIGINT },
       boss_id: { type: Sequelize.INTEGER },
       location: { type: Sequelize.STRING(255) },
       pokemon_id: { type: Sequelize.INTEGER },
