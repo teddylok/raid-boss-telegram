@@ -546,7 +546,7 @@ function joinBoss(msg: any, bossId: number, option: number) {
     }))
     .then((instance: GroupInstance) => instance.addUser(userInstance, { option }))
     .then(() => group.addUser(getUserDomainObject(userInstance, option)))
-    .then(() => bot.editMessageText(`${boss.toString()} ${i18n.t('lastUpdated')}: ${Moment().format('HH:mm:ss')}`, {
+    .then(() => bot.editMessageText(`${boss.toString()} ${i18n.t('lastUpdated')}: ${Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour').format('HH:mm:ss')}`, {
         chat_id: channel.id,
         message_id: msg.message.message_id,
         reply_markup: JSON.stringify({ inline_keyboard: getTimeSlotList(bossId) }),
