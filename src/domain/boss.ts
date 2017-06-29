@@ -6,6 +6,7 @@ import * as i18n from 'i18next';
 import { User } from './user';
 import { Pokedex } from './pokedex';
 import { GroupInstance } from '../models/entity/group';
+import { TimeSlots } from "./timeslot";
 
 export class Boss {
   id: number;
@@ -62,14 +63,30 @@ export class Boss {
     let flag = '';
 
     switch (this.pokemonId) {
-      case 3: flag = Emoji.get('seedling'); break;
-      case 6: flag = Emoji.get('fire'); break;
-      case 9: flag = Emoji.get('droplet'); break;
-      case 112: flag = Emoji.get('mountain'); break;
-      case 131: flag = Emoji.get('snowflake'); break;
-      case 143: flag = Emoji.get('panda_face'); break;
-      case 248: flag = Emoji.get('hatched_chick'); break;
-      default: flag = Emoji.get('red_circle'); break;
+      case 3:
+        flag = Emoji.get('seedling');
+        break;
+      case 6:
+        flag = Emoji.get('fire');
+        break;
+      case 9:
+        flag = Emoji.get('droplet');
+        break;
+      case 112:
+        flag = Emoji.get('mountain');
+        break;
+      case 131:
+        flag = Emoji.get('snowflake');
+        break;
+      case 143:
+        flag = Emoji.get('panda_face');
+        break;
+      case 248:
+        flag = Emoji.get('hatched_chick');
+        break;
+      default:
+        flag = Emoji.get('red_circle');
+        break;
     }
 
     return flag;
@@ -94,8 +111,16 @@ export class Boss {
   toString() {
     let list = `${Moment(this.start).format('HH:mm')} ${this.location} ${this.getEmojiName()}\n\n`;
 
-    _.map(this.groups, (group: Group) => {
-      list += `${group.toString()}\n`;
+    // _.map(this.groups, (group: Group) => {
+    //   list += `${group.toString()}\n`;
+    // });
+
+    const timeSlots = new TimeSlots().getTimeSlots();
+    _.map(timeSlots, timeSlot => {
+      list += `${timeSlot.emoji} ${timeSlot.text}\n`;
+      _.map(this.groups, (group: Group) => {
+        list += `${group.toTimeSlotString(timeSlot.id)}\n`;
+      });
     });
 
     return list;

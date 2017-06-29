@@ -10,6 +10,7 @@ export interface GroupUserAttribute {
   deleted_at?: Date;
   group_id: number;
   user_id: number;
+  option: number;
 }
 
 export interface GroupUserInstance extends Sequelize.Instance<GroupUserAttribute>, GroupUserAttribute {
@@ -25,7 +26,8 @@ export function defineGroupUser<GroupUserInstance, GroupUserAttribute>(sequelize
     updated_at: { type: Sequelize.DATE },
     deleted_at: { type: Sequelize.DATE },
     group_id: { type: Sequelize.INTEGER, allowNull: false },
-    user_id: { type: Sequelize.BIGINT, allowNull: false }
+    user_id: { type: Sequelize.BIGINT, allowNull: false },
+    option: { type: Sequelize.INTEGER, allowNull: false }
   }, {
     tableName: 'group_users',
     timestamps: true,

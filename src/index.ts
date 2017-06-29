@@ -16,6 +16,8 @@ import { Team } from './domain/team';
 import * as Express from 'express';
 import * as Schedule from 'node-schedule';
 import * as Request from 'request-promise';
+import * as util from 'util';
+import { TimeSlots } from './domain/timeslot';
 
 const app = Express();
 
@@ -45,35 +47,36 @@ loadDataFromDatabase();
 
 // bot listener
 bot.onText(/\/start/, (msg) => {
-  console.log(msg);
+  const id = msg.chat.id;
+  const name = msg.chat.title;
+
   if (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup') {
     bot.sendMessage(
-      msg.chat.id,
+      id,
       `${Emoji.get('no_entry_sign')}  ${i18n.t('botOnlySupportGroupChat')}`
     );
     return;
   }
-  const id = msg.chat.id;
-  const name = msg.chat.title;
 
   // validation and make sure one channel is unique
-  if (getChannel(id)) {
+  if (_.find(channels, (channel) => _.toString(channel.id) === _.toString(id))) {
     bot.sendMessage(
       msg.chat.id,
       `${Emoji.get('no_entry_sign')}  ${i18n.t('botHasBeenRegistered')}`
     );
-  } else {
-    Models.Channel
-      .findById(id)
-      .then(channel => (channel) ? channel : Models.Channel.create({
-        id,
-        name
-      }))
-      .then(channel => channels.push(new Channel(bot, channel.id, channel.name)))
-      .catch(err => console.log(err));
-
-    bot.sendMessage(msg.chat.id, `${Emoji.get('white_check_mark')}  ${i18n.t('botRegistered')}`);
+    return;
   }
+
+  Models.Channel
+    .findById(id)
+    .then(channel => (channel) ? channel : Models.Channel.create({
+      id,
+      name
+    }))
+    .then(channel => channels.push(new Channel(bot, channel.id, channel.name)))
+    .catch(err => console.log(err));
+
+  bot.sendMessage(msg.chat.id, `${Emoji.get('white_check_mark')}  ${i18n.t('botRegistered')}`);
 });
 
 bot.onText(/\/raid (.+)/, (msg, match) => {
@@ -171,7 +174,7 @@ bot.onText(/\/join/, (msg) => {
   const channel = getChannel(channelId);
 
   bot.sendMessage(channelId, i18n.t('join.pleaseSelect'), {
-    reply_markup: JSON.stringify({ inline_keyboard: getJoinBossList(channel) }),
+    reply_markup: JSON.stringify({ inline_keyboard: getJoinList(channel) }),
     chat_id: msg.chat.id,
     message_id: msg.message_id
   });
@@ -266,7 +269,17 @@ bot.on('callback_query', (msg) => {
         });
       break;
     case 'JOIN':
-      joinBoss(msg, _.toInteger(match[1]));
+      // show time slot options
+      boss = channel.getBossByBossId(_.toInteger(match[1]));
+
+      bot.editMessageText(`${boss.toString()}\n\n`, {
+        reply_markup: JSON.stringify({ inline_keyboard: getTimeSlotList(boss.id) }),
+        chat_id: channelId,
+        message_id: msg.message.message_id
+      });
+      break;
+    case 'JOINBOSS':
+      joinBoss(msg, _.toInteger(match[1]), _.toInteger(match[2]) || 4);
       break;
     case 'LOCALE':
       (_.indexOf(locales, match[1])) ? i18n.changeLanguage(match[1]) : false;
@@ -367,7 +380,7 @@ function loadChannels() {
             include: [{
               required: false,
               model: Models.User,
-              through: 'GroupUser',
+              through: { model: Models.GroupUser, attributes: ['option'] },
               as: 'Users'
             }]
           }]
@@ -454,7 +467,7 @@ function getUser(from) {
     });
 }
 
-function getUserDomainObject(instance: UserInstance) {
+function getUserDomainObject(instance: UserInstance, option?: number) {
   const user = new User(bot);
 
   user.id = _.toString(instance.id);
@@ -463,6 +476,7 @@ function getUserDomainObject(instance: UserInstance) {
   user.username = instance.username;
   user.languageCode = instance.language_code;
   user.teamId = instance.team_id;
+  user.option = (instance.GroupUser) ? instance.GroupUser.option : option;
 
   return user;
 }
@@ -505,7 +519,7 @@ function setTeam(from, teamId: number) {
     });
 }
 
-function joinBoss(msg: any, bossId: number) {
+function joinBoss(msg: any, bossId: number, option: number) {
   const channel = getChannel(msg.message.chat.id);
   const boss = channel.getBossByBossId(bossId);
 
@@ -530,18 +544,17 @@ function joinBoss(msg: any, bossId: number) {
         id: group.id
       }
     }))
-    .then((instance: GroupInstance) => instance.addUser(userInstance))
-    .then(() => group.addUser(getUserDomainObject(userInstance)))
-    // .then(() => bot.sendMessage(channel.id, i18n.t('boss.joined', { name: userInstance.first_name, start: Moment(boss.start).format('HH:mm'), location : boss.location, bossName: boss.getEmojiName() })))
+    .then((instance: GroupInstance) => instance.addUser(userInstance, { option }))
+    .then(() => group.addUser(getUserDomainObject(userInstance, option)))
     .then(() => bot.editMessageText(`${boss.toString()} ${i18n.t('lastUpdated')}: ${Moment().format('HH:mm:ss')}`, {
         chat_id: channel.id,
         message_id: msg.message.message_id,
-        reply_markup: JSON.stringify({ inline_keyboard: getJoinBossList(channel) }),
+        reply_markup: JSON.stringify({ inline_keyboard: getTimeSlotList(bossId) }),
       }))
     .catch(err => console.log(err));
 }
 
-function  getJoinBossList(channel: Channel) {
+function getJoinList(channel: Channel) {
   const key = [];
   let pos = 0;
   let btnPerLine = 1;
@@ -552,6 +565,23 @@ function  getJoinBossList(channel: Channel) {
     if (!key[row]) key[row] = [];
 
     key[row].push({ text: text, callback_data: `JOIN_${boss.id}` });
+    pos++;
+  });
+  return key;
+}
+
+function getTimeSlotList(bossId: number) {
+  const timeSlots = new TimeSlots().getTimeSlots();
+
+  const key = [];
+  let pos = 0;
+  let btnPerLine = 1;
+
+  _.map(timeSlots, (timeSlot) => {
+    let row = pos / btnPerLine || 0;
+    if (!key[row]) key[row] = [];
+
+    key[row].push({ text: timeSlot.text, callback_data: `JOINBOSS_${bossId}_${timeSlot.id}` });
     pos++;
   });
   return key;

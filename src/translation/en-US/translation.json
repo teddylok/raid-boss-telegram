@@ -22,5 +22,9 @@
   "pleaseSelect": "Please select",
   "today": "Today",
   "battle.currentlyNoBattle": "Sorry. There are no battle now",
-  "lastUpdated": "Last update"
+  "lastUpdated": "Last update",
+  "timeslot.reach": "Already there",
+  "timeslot.15min": "15 MIN",
+  "timeslot.30min": "30 MIN",
+  "timeslot.45min": "45 MIN"
 }

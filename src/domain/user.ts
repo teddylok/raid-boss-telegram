@@ -9,6 +9,7 @@ export class User {
   username: string;
   languageCode: string;
   teamId: number;
+  option?: number;
 
   constructor(bot: any) {
     this.bot = bot;

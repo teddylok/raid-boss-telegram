@@ -46,4 +46,17 @@ export class Group {
 
     return list;
   }
+
+  toTimeSlotString(timeSlot: number) {
+    let count = 1;
+    let users = _.filter(this.users, u => u.option === timeSlot);
+    let list = `${this.getFlag()}  ${this.name} (${users.length})\n`;
+
+    _.map(users, (user: User) => {
+      list += ` - ${count}. ${user.firstName}\n`;
+      count++;
+    });
+
+    return list;
+  }
 }

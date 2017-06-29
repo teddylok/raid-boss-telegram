@@ -1,6 +1,7 @@
 import * as Sequelize from 'sequelize';
 import { Sequelize as SequelizeInterface } from 'sequelize';
 import { ModelsInterface } from '../models';
+import { GroupUserInstance } from "./group-user";
 
 export interface UserAttribute {
   id: number;
@@ -12,9 +13,11 @@ export interface UserAttribute {
   username: string;
   language_code: string;
   team_id: number;
+  GroupUser?: GroupUserInstance;
 }
 
 export interface UserInstance extends Sequelize.Instance<UserAttribute>, UserAttribute {
+  GroupUser?: GroupUserInstance;
 }
 
 export interface UserModel extends Sequelize.Model<UserInstance, UserAttribute> {
