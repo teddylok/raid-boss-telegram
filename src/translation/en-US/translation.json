@@ -21,5 +21,6 @@
   "team.changed": "{{name}} change to {{teamName}} team",
   "pleaseSelect": "Please select",
   "today": "Today",
-  "battle.currentlyNoBattle": "Sorry. There are no battle now"
+  "battle.currentlyNoBattle": "Sorry. There are no battle now",
+  "lastUpdated": "Last update"
 }

@@ -169,21 +169,9 @@ bot.onText(/\/boss/, (msg) => {
 bot.onText(/\/join/, (msg) => {
   const channelId = msg.chat.id;
   const channel = getChannel(channelId);
-  const key = [];
-  let pos = 0;
-  let btnPerLine = 1;
-
-  _.map(_.sortBy(channel.getUpcomingBoss(), ['start', 'bossId']), (boss: Boss) => {
-    let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
-    let row = pos / btnPerLine || 0;
-    if (!key[row]) key[row] = [];
-
-    key[row].push({ text: text, callback_data: `JOIN_${boss.id}` });
-    pos++;
-  });
 
   bot.sendMessage(channelId, i18n.t('join.pleaseSelect'), {
-    reply_markup: JSON.stringify({ inline_keyboard: key }),
+    reply_markup: JSON.stringify({ inline_keyboard: getJoinBossList(channel) }),
     chat_id: msg.chat.id,
     message_id: msg.message_id
   });
@@ -518,8 +506,6 @@ function setTeam(from, teamId: number) {
 }
 
 function joinBoss(msg: any, bossId: number) {
-  console.log(msg);
-
   const channel = getChannel(msg.message.chat.id);
   const boss = channel.getBossByBossId(bossId);
 
@@ -546,14 +532,29 @@ function joinBoss(msg: any, bossId: number) {
     }))
     .then((instance: GroupInstance) => instance.addUser(userInstance))
     .then(() => group.addUser(getUserDomainObject(userInstance)))
-    // .then(() => {
-    //   bot.editMessageText(boss.toString(), {
-    //     chat_id: channel.id,
-    //     message_id: msg.message.message_id
-    //   });
-    // })
-    .then(() => bot.sendMessage(channel.id, i18n.t('boss.joined', { name: userInstance.first_name, start: Moment(boss.start).format('HH:mm'), location : boss.location, bossName: boss.getEmojiName() })))
+    // .then(() => bot.sendMessage(channel.id, i18n.t('boss.joined', { name: userInstance.first_name, start: Moment(boss.start).format('HH:mm'), location : boss.location, bossName: boss.getEmojiName() })))
+    .then(() => bot.editMessageText(`${boss.toString()} ${i18n.t('lastUpdated')}: ${Moment().format('HH:mm:ss')}`, {
+        chat_id: channel.id,
+        message_id: msg.message.message_id,
+        reply_markup: JSON.stringify({ inline_keyboard: getJoinBossList(channel) }),
+      }))
     .catch(err => console.log(err));
+}
+
+function  getJoinBossList(channel: Channel) {
+  const key = [];
+  let pos = 0;
+  let btnPerLine = 1;
+
+  _.map(_.sortBy(channel.getUpcomingBoss(), ['start', 'bossId']), (boss: Boss) => {
+    let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
+    let row = pos / btnPerLine || 0;
+    if (!key[row]) key[row] = [];
+
+    key[row].push({ text: text, callback_data: `JOIN_${boss.id}` });
+    pos++;
+  });
+  return key;
 }
 
 const server = app.listen(port, () => {
