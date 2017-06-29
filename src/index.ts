@@ -18,6 +18,7 @@ import * as Schedule from 'node-schedule';
 import * as Request from 'request-promise';
 import * as util from 'util';
 import { TimeSlots } from './domain/timeslot';
+import { Time } from "./domain/time";
 
 const app = Express();
 
@@ -592,20 +593,23 @@ const server = app.listen(port, () => {
 });
 
 // schedule to ping Heroku every 15min except 00:00 to 06:00
-const schedulerHost = process.env.SCHEDULER_HOST;
-const rule = new Schedule.RecurrenceRule();
-rule.hour = [0, new Schedule.Range(5, 23)];
-rule.minute = [0, 15, 30, 45];
+// const schedulerHost = process.env.SCHEDULER_HOST;
+// const rule = new Schedule.RecurrenceRule();
+// let wakeUpTime = 5 + 8;
+// let sleepTime = 23 + 8;
+// rule.hour = [0, new Schedule.Range(wakeUpTime, sleepTime)];
+// rule.minute = [0, 15, 30, 45];
 
-const job = Schedule.scheduleJob(rule, () => {
-  Request(`http://${host}`)
-    .then(() => console.log(`Ping ${host} at ${Moment()}`))
-    .catch(err => console.log(err));
-});
+// const job = Schedule.scheduleJob(rule, () => {
+//   Request(`http://${host}`)
+//     .then(response => console.log(response))
+//     .then(() => console.log(`Ping ${host} at ${Time.now()}`))
+//     .catch(err => console.log(err));
+// });
 
 // schedule to wakeUp the scheduler
-const job2 = Schedule.scheduleJob('* * 21 * * *', () => {
-  Request(`http://${schedulerHost}`)
-    .then(() => console.log(`Ping ${schedulerHost} at ${Moment()}`))
-    .catch(err => console.log(err));
-});
+// const job2 = Schedule.scheduleJob('* * 21 * * *', () => {
+//   Request(`http://${schedulerHost}`)
+//     .then(() => console.log(`Ping ${schedulerHost} at ${Time.now()}`))
+//     .catch(err => console.log(err));
+// });
