@@ -59,39 +59,6 @@ export class Boss {
     group.addUser(user);
   }
 
-  getFlag() {
-    let flag = '';
-
-    switch (this.pokemonId) {
-      case 3:
-        flag = Emoji.get('seedling');
-        break;
-      case 6:
-        flag = Emoji.get('fire');
-        break;
-      case 9:
-        flag = Emoji.get('droplet');
-        break;
-      case 112:
-        flag = Emoji.get('mountain');
-        break;
-      case 131:
-        flag = Emoji.get('snowflake');
-        break;
-      case 143:
-        flag = Emoji.get('panda_face');
-        break;
-      case 248:
-        flag = Emoji.get('hatched_chick');
-        break;
-      default:
-        flag = Emoji.get('red_circle');
-        break;
-    }
-
-    return flag;
-  }
-
   removeUserInGroup(userId: string) {
     _.map(this.groups, group => {
       group.users = _.filter(group.users, user => user.id !== userId);
@@ -102,18 +69,64 @@ export class Boss {
     return _.map(this.groups, 'id');
   }
 
+  getEmoji() {
+    let emoji = '';
+
+    switch (this.pokemonId) {
+      case 3:
+        emoji = Emoji.get('seedling');
+        break;
+      case 6:
+        emoji = Emoji.get('fire');
+        break;
+      case 9:
+        emoji = Emoji.get('droplet');
+        break;
+      case 112:
+        emoji = Emoji.get('mountain');
+        break;
+      case 131:
+        emoji = Emoji.get('snowflake');
+        break;
+      case 143:
+        emoji = Emoji.get('panda_face');
+        break;
+      case 248:
+        emoji = Emoji.get('hatched_chick');
+        break;
+      default:
+        emoji = Emoji.get('red_circle');
+        break;
+    }
+
+    return emoji;
+  }
+
   getEmojiName() {
     if (!this.pokemonId) return '';
     const star = (_.indexOf([131, 143, 248], this.pokemonId) > -1) ? `${Emoji.get('star')}` : '';
-    return `${this.getFlag()} ${this.name} ${star}`;
+    return `${this.getEmoji()} ${this.name} ${star}`;
+  }
+
+  getTimeSlotList() {
+    const timeSlots = new TimeSlots().getTimeSlots();
+
+    const key = [];
+    let pos = 0;
+    let btnPerLine = 1;
+
+    _.map(timeSlots, (timeSlot) => {
+      let row = pos / btnPerLine || 0;
+      if (!key[row]) key[row] = [];
+
+      key[row].push({ text: timeSlot.text, callback_data: `JOINBOSS_${this.id}_${timeSlot.id}` });
+      pos++;
+    });
+    return key;
   }
 
   toString() {
     let list = `${Moment(this.start).format('HH:mm')} ${this.location} ${this.getEmojiName()}\n\n`;
-
-    // _.map(this.groups, (group: Group) => {
-    //   list += `${group.toString()}\n`;
-    // });
 
     const timeSlots = new TimeSlots().getTimeSlots();
     _.map(timeSlots, timeSlot => {
