@@ -84,7 +84,7 @@ bot.onText(/\/start/, (msg) => {
     .then(channel => channels.push(new Channel(bot, channel.id, channel.name)))
     .catch(err => console.log(err));
 
-  bot.sendMessage(msg.chat.id, `${Emoji.get('white_check_mark')}  ${i18n.t('botRegistered')}`);
+  bot.sendMessage(id, `${Emoji.get('white_check_mark')}  ${i18n.t('botRegistered')}`);
 });
 
 bot.onText(/\/raid (.+)/, (msg, match) => {
@@ -137,37 +137,37 @@ bot.onText(/\/raid (\d\d:\d\d) (.+)/, (msg, match) => {
         _.find(boss.groups, group => group.seq === groupInstance.seq).id = groupInstance.id;
       });
     })
-    .then(() => bot.sendMessage(channel.id, channel.toString()));
+    .then(() => bot.sendMessage(channel.id, channel.toString(), {
+      chat_id: msg.chat.id,
+      message_id: msg.message_id
+    }));
 });
 
 bot.onText(/\/list(.+)?/, (msg, match) => {
   const channel = getChannel(msg.chat.id);
-  bot.sendMessage(channel.id, channel.toString(_.trim(match[1])));
+  bot.sendMessage(channel.id, channel.toString(_.trim(match[1])), {
+    chat_id: msg.chat.id,
+    message_id: msg.message_id
+  });
 });
 
 bot.onText(/\/boss/, (msg) => {
   const channelId = msg.chat.id;
   const channel = getChannel(channelId);
-  const key = [];
-  let pos = 0;
-  let btnPerLine = 1;
+  const keys = [];
 
-  if (!channel.getBattleBoss()) {
+  if (!channel.getBattleAndCompletedBoss()) {
     bot.sendMessage(channelId, i18n.t('battle.currentlyNoBattle'));
     return;
   }
 
   _.map(channel.getBattleAndCompletedBoss(), (boss: Boss) => {
     let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
-    let row = pos / btnPerLine || 0;
-    if (!key[row]) key[row] = [];
-
-    key[row].push({ text: text, callback_data: `BOSS_${boss.id}` });
-    pos++;
+    keys.push({ text: text, callbackData: `BOSS_${boss.id}` });
   });
 
   bot.sendMessage(channelId, i18n.t('boss.pleaseSelect'), {
-    reply_markup: JSON.stringify({ inline_keyboard: key }),
+    reply_markup: JSON.stringify({ inline_keyboard: BotHelper.getInlineKeyboard(keys, 2) }),
     chat_id: msg.chat.id,
     message_id: msg.message_id
   });
@@ -188,22 +188,31 @@ bot.onText(/\/team/, (msg) => {
   const channelId = msg.chat.id;
   const channel = getChannel(channelId);
 
+  let keys = channel.getUpcomingBossList('TEAM');
+  console.log(keys);
   bot.sendMessage(channelId, i18n.t('team.pleaseSelect'), {
-    reply_markup: JSON.stringify({ inline_keyboard: channel.getUpcomingBossList('TEAM') }),
+    reply_markup: JSON.stringify({ inline_keyboard: keys }),
     chat_id: msg.chat.id,
     message_id: msg.message_id
   });
 });
 
-bot.onText(/\/delboss (\d)/, (msg, match) => {
+bot.onText(/\/delboss/, (msg, match) => {
   const id = match[1];
   const channelId = msg.chat.id;
+  const channel = getChannel(channelId);
+  const keys = [];
 
-  bossRepository
-    .remove(id)
-    .then(() => getChannel(channelId).removeBoss(id))
-    .then(() => bot.sendMessage(channelId, `${Emoji.get('skull_and_crossbones')}  ${i18n.t('boss.deleted', { id })}`))
-    .catch(err => console.log(err));
+  _.map(channel.boss, (boss: Boss) => {
+    let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
+    keys.push({ text, callbackData: `DELBOSS_${boss.id}`});
+  });
+
+  bot.sendMessage(msg.chat.id, i18n.t('team.pleaseSelect'), {
+    reply_markup: JSON.stringify({ inline_keyboard: BotHelper.getInlineKeyboard(keys, 2) }),
+    chat_id: msg.chat.id,
+    message_id: msg.message_id
+  });
 });
 
 bot.onText(/\/setting/, (msg) => {
@@ -239,7 +248,7 @@ bot.on('callback_query', (msg) => {
       });
       break;
     case 'TEAM':
-      boss = channel.getBossByBossId(_.toInteger(match[1]));
+      boss = channel.getBossById(_.toInteger(match[1]));
       bot.editMessageText(boss.toString(), {
         chat_id: chatId,
         message_id: msg.message.message_id
@@ -266,6 +275,18 @@ bot.on('callback_query', (msg) => {
       break;
     case 'JOINBOSS':
       joinBoss(msg, _.toInteger(match[1]), _.toInteger(match[2]));
+      break;
+    case 'DELBOSS':
+      const id = _.toInteger(match[1]);
+      bossRepository
+        .remove(id)
+        .then(() => getChannel(channel.id).removeBoss(id))
+        .then(() => bot.editMessageText(channel.toString(), {
+          chat_id: chatId,
+          message_id: msg.message.message_id
+        }))
+        // .then(() => bot.sendMessage(channel.id, `${Emoji.get('skull_and_crossbones')}  ${i18n.t('boss.deleted', { id })}`))
+        .catch(err => console.log(err));
       break;
     case 'LOCALE':
       (_.indexOf(locales, match[1])) ? i18n.changeLanguage(match[1]) : false;
