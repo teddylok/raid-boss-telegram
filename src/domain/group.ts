@@ -4,6 +4,9 @@ import { User } from './user';
 
 export class Group {
   id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date;
   bossId: number;
   bot: any;
   name: string;

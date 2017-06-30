@@ -3,6 +3,9 @@ import * as _ from 'lodash';
 
 export class User {
   id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date;
   bot: any;
   firstName: string;
   lastName: string;

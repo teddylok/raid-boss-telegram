@@ -8,7 +8,7 @@ export interface BossAttribute {
   created_at?: Date;
   updated_at?: Date;
   deleted_at?: Date;
-  channel_id: number;
+  channel_id: string;
   boss_id: number;
   location: string;
   pokemon_id: number;

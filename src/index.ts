@@ -17,9 +17,11 @@ import * as Express from 'express';
 import * as Schedule from 'node-schedule';
 import * as Request from 'request-promise';
 import * as util from 'util';
-import { TimeSlots } from './domain/timeslot';
-import { Time } from './domain/time';
-import { BotHelper } from "./util/bot-helper";
+import { BotHelper } from './util/bot-helper';
+import { UserRepository } from './models/repository/user-repository';
+import { GroupRepository } from './models/repository/group-repository';
+import { BossRepository } from './models/repository/boss-repository';
+import { BossInstance } from './models/entity/boss';
 
 const app = Express();
 
@@ -43,6 +45,10 @@ i18n.init({
 
 const bot = new TelegramBot(token, { polling: true });
 const pokedex = new Pokedex(bot);
+
+const userRepository = new UserRepository(bot);
+const groupRepository = new GroupRepository(bot);
+const bossRepository = new BossRepository(bot, pokedex);
 
 // load data from database
 loadDataFromDatabase();
@@ -94,7 +100,6 @@ bot.onText(/\/raid (\d\d:\d\d) (.+)/, (msg, match) => {
   const channel = getChannel(msg.chat.id);
   const time = match[1];
   const location = match[2];
-  let boss: Boss = null;
 
   if (!channel) return askForRegistration(msg.chat.id);
 
@@ -106,14 +111,11 @@ bot.onText(/\/raid (\d\d:\d\d) (.+)/, (msg, match) => {
   start.millisecond(0);
 
   let bossInstance = null;
+  let boss: Boss = new Boss(bot, pokedex, null, channel.id, channel.boss.length + 1, start.toDate(), location);
 
-  Models.Boss.create({
-    boss_id: channel.boss.length + 1,
-    channel_id: channel.id,
-    start: start.toString(),
-    location
-  })
-    .then(instance => {
+  bossRepository
+    .save(boss)
+    .then((instance: BossInstance) => {
       boss = new Boss(bot, pokedex, instance.id, instance.channel_id, instance.boss_id, instance.start, instance.location);
       channel.addBoss(boss);
       bossInstance = instance;
@@ -129,7 +131,7 @@ bot.onText(/\/raid (\d\d:\d\d) (.+)/, (msg, match) => {
 
       return groups;
     })
-    .then((groups) => Models.Group.bulkCreate(groups, { returning: true }))
+    .then((groups: Group[]) => groupRepository.bulkCreate(groups))
     .then(groupInstances => {
       _.map(groupInstances, (groupInstance: any) => {
         _.find(boss.groups, group => group.seq === groupInstance.seq).id = groupInstance.id;
@@ -176,7 +178,7 @@ bot.onText(/\/join/, (msg) => {
   const channel = getChannel(channelId);
 
   bot.sendMessage(channelId, i18n.t('join.pleaseSelect'), {
-    reply_markup: JSON.stringify({ inline_keyboard: getJoinList(channel) }),
+    reply_markup: JSON.stringify({ inline_keyboard: channel.getUpcomingBossList('JOIN') }),
     chat_id: msg.chat.id,
     message_id: msg.message_id
   });
@@ -185,21 +187,9 @@ bot.onText(/\/join/, (msg) => {
 bot.onText(/\/team/, (msg) => {
   const channelId = msg.chat.id;
   const channel = getChannel(channelId);
-  const key = [];
-  let pos = 0;
-  let btnPerLine = 1;
-
-  _.map(_.sortBy(channel.getUpcomingBoss(), ['start', 'bossId']), (boss: Boss) => {
-    let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
-    let row = pos / btnPerLine || 0;
-    if (!key[row]) key[row] = [];
-
-    key[row].push({ text: text, callback_data: `TEAM_${boss.id}` });
-    pos++;
-  });
 
   bot.sendMessage(channelId, i18n.t('team.pleaseSelect'), {
-    reply_markup: JSON.stringify({ inline_keyboard: key }),
+    reply_markup: JSON.stringify({ inline_keyboard: channel.getUpcomingBossList('TEAM') }),
     chat_id: msg.chat.id,
     message_id: msg.message_id
   });
@@ -209,9 +199,8 @@ bot.onText(/\/delboss (\d)/, (msg, match) => {
   const id = match[1];
   const channelId = msg.chat.id;
 
-  Models.Boss.destroy({
-    where: { id }
-  })
+  bossRepository
+    .remove(id)
     .then(() => getChannel(channelId).removeBoss(id))
     .then(() => bot.sendMessage(channelId, `${Emoji.get('skull_and_crossbones')}  ${i18n.t('boss.deleted', { id })}`))
     .catch(err => console.log(err));
@@ -231,9 +220,11 @@ bot.on('callback_query', (msg) => {
     case 'BOSS':
       boss = channel.getBossById(_.toInteger(match[1]));
       const level4Pokemons = pokedex.getPokemonByLevel(4);
-      const key = [];
-      let pos = 0;
-      let btnPerLine = 3;
+      const keys = [];
+
+      _.map(level4Pokemons, (pokemon: Pokemon) => {
+        keys.push({ text: pokemon.zhHkName, callbackData: `SETBOSS_${boss.bossId}_${pokemon.id}` });
+      });
 
       const message = i18n.t('boss.whatIsTheBoss', {
         bossId: match[1],
@@ -241,15 +232,8 @@ bot.on('callback_query', (msg) => {
         location: boss.location
       });
 
-      _.map(level4Pokemons, (pokemon: Pokemon) => {
-        let row = pos / btnPerLine | 0;
-        if (!key[row]) key[row] = [];
-        key[row].push({ text: pokemon.zhHkName, callback_data: `SETBOSS_${match[1]}_${pokemon.id}` });
-        pos++;
-      });
-
       bot.editMessageText(message, {
-        reply_markup: JSON.stringify({ inline_keyboard: key }),
+        reply_markup: JSON.stringify({ inline_keyboard: BotHelper.getInlineKeyboard(keys, 3) }),
         chat_id: chatId,
         message_id: msg.message.message_id
       });
@@ -272,16 +256,16 @@ bot.on('callback_query', (msg) => {
       break;
     case 'JOIN':
       // show time slot options
-      boss = channel.getBossByBossId(_.toInteger(match[1]));
+      boss = channel.getBossById(_.toInteger(match[1]));
 
       bot.editMessageText(`${boss.toString()}\n\n`, {
-        reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList() }),
+        reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
         chat_id: chatId,
         message_id: msg.message.message_id
       });
       break;
     case 'JOINBOSS':
-      joinBoss(msg, _.toInteger(match[1]), _.toInteger(match[2]) || 4);
+      joinBoss(msg, _.toInteger(match[1]), _.toInteger(match[2]));
       break;
     case 'LOCALE':
       (_.indexOf(locales, match[1])) ? i18n.changeLanguage(match[1]) : false;
@@ -315,8 +299,6 @@ bot.on('callback_query', (msg) => {
 });
 
 bot.on('message', (msg) => {
-  const chatId = msg.chat.id;
-
   if (msg.new_chat_member) {
     chooseTeam(msg);
   }
@@ -407,17 +389,14 @@ function loadChannels() {
         channels.push(channel);
 
         _.map(channelInstance.Bosses, (bossInstance: any) => {
-          const boss = new Boss(bot, pokedex, bossInstance.id, bossInstance.channel_id, bossInstance.boss_id, bossInstance.start, bossInstance.location);
-          if (bossInstance.pokemon_id) {
-            boss.setPokemon(_.toInteger(bossInstance.pokemon_id));
-          }
+          const boss = bossRepository.getDomainObject(bossInstance);
           channel.boss.push(boss);
 
           _.map(bossInstance.Groups, (groupInstance: any) => {
             const group = boss.addGroup(groupInstance);
 
             _.map(groupInstance.Users, (userInstance: any) => {
-              group.users.push(getUserDomainObject(userInstance));
+              group.users.push(userRepository.getDomainObject(userInstance));
             });
           });
         });
@@ -426,18 +405,11 @@ function loadChannels() {
 }
 
 function setBoss(channel: Channel, bossId: number, pokemonId: number) {
-  const boss = channel.getBossByBossId(bossId);
-  const pokemon = pokedex.getPokemonById(pokemonId);
-
-  return Models.Boss.update({
-    pokemon_id: pokemon.id
-  }, {
-    where: {
-      id: boss.id
-    },
-    returning: true
-  })
-    .then(() => boss.setPokemon(pokemonId));
+  const boss = channel.getBossById(bossId);
+  return Promise.resolve()
+    .then(() => boss.setPokemon(pokemonId))
+    .then(() => bossRepository.save(boss))
+    .catch(err => console.log(err));
 }
 
 function getTranslations() {
@@ -452,47 +424,6 @@ function getTranslations() {
   });
 
   return resources;
-}
-
-function getUser(from) {
-  const userId = from.id;
-  return Models.User.find({
-    where: {
-      id: userId
-    }
-  })
-    .then((user: UserInstance) => {
-      if (user) {
-        user.first_name = from.first_name;
-        user.last_name = from.last_name;
-        user.username = from.username;
-        user.language_code = from.language_code;
-        return user.save();
-      }
-
-      return Models.User.create({
-        id: userId,
-        first_name: from.first_name || '',
-        last_name: from.last_name || '',
-        username: from.username || '',
-        language_code: from.language_code,
-        team_id: Team.TEAM_VALOR
-      });
-    });
-}
-
-function getUserDomainObject(instance: UserInstance, option?: number) {
-  const user = new User(bot);
-
-  user.id = _.toString(instance.id);
-  user.firstName = instance.first_name;
-  user.lastName = instance.last_name;
-  user.username = instance.username;
-  user.languageCode = instance.language_code;
-  user.teamId = instance.team_id;
-  user.option = (instance.GroupUser) ? instance.GroupUser.option : option;
-
-  return user;
 }
 
 function chooseTeam(msg) {
@@ -526,63 +457,47 @@ function chooseTeam(msg) {
 }
 
 function setTeam(from, teamId: number) {
-  return getUser(from)
-    .then((user: UserInstance) => {
-      user.team_id = teamId;
-      user.save();
-      return user;
-    });
+  const user = getUser(from);
+  user.teamId = teamId;
+
+  return userRepository
+    .save(user)
+    .catch(err => console.log(err));
+}
+
+function getUser(from, option?: string) {
+  const user = new User(bot);
+  user.id = _.toString(from.id);
+  user.firstName = from.first_name;
+  user.lastName = from.last_name;
+  user.username = from.username;
+  user.languageCode = from.language_code;
+
+  return user;
 }
 
 function joinBoss(msg: any, bossId: number, option: number) {
   const channel = getChannel(msg.message.chat.id);
-  const boss = channel.getBossByBossId(bossId);
+  const boss = channel.getBossById(bossId);
 
   let group = null;
   let userInstance = null;
 
   Promise.resolve()
-    .then(() => getUser(msg.from))
+    .then(() => userRepository.save(getUser(msg.from)))
     .then((instance: UserInstance) => userInstance = instance)
     .then(() => group = _.find(boss.groups, (group: Group) => group.seq === userInstance.team_id))
-    .then(() => Models.GroupUser.destroy({
-      where: {
-        group_id: {
-          $in: boss.getGroupIds()
-        },
-        user_id: userInstance.id
-      }
-    }))
+    .then(() => groupRepository.removeGroupUser(boss.getGroupIds(), userInstance.id))
     .then(() => boss.removeUserInGroup(userInstance.id))
-    .then(() => Models.Group.find({
-      where: {
-        id: group.id
-      }
-    }))
+    .then(() => groupRepository.getById(group.id))
     .then((instance: GroupInstance) => instance.addUser(userInstance, { option }))
-    .then(() => group.addUser(getUserDomainObject(userInstance, option)))
+    .then(() => group.addUser(userRepository.getDomainObject(userInstance, option)))
     .then(() => bot.editMessageText(`${boss.toString()} ${i18n.t('lastUpdated')}: ${Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour').format('HH:mm:ss')}`, {
         chat_id: channel.id,
         message_id: msg.message.message_id,
-        reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList() }),
+        reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
       }))
     .catch(err => console.log(err));
-}
-
-function getJoinList(channel: Channel) {
-  const key = [];
-  let pos = 0;
-  let btnPerLine = 1;
-
-  _.map(_.sortBy(channel.getUpcomingBoss(), ['start', 'bossId']), (boss: Boss) => {
-    let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
-    let row = pos / btnPerLine || 0;
-    if (!key[row]) key[row] = [];
-
-    key[row].push({ text: text, callback_data: `JOIN_${boss.id}` });
-    pos++;
-  });
-  return key;
 }
 
 const server = app.listen(port, () => {
