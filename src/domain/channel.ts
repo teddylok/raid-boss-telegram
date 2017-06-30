@@ -29,10 +29,6 @@ export class Channel {
     return _.find(this.boss, boss => boss.id === id );
   }
 
-  getBossByBossId(bossId: number) {
-    return _.find(this.boss, boss => boss.bossId === bossId );
-  }
-
   getCompletedBoss() {
     return _.sortBy(_.filter(this.boss, (boss: Boss) => this.getCurrentTime() > Moment(boss.start).add(1, 'hour')), ['start', 'bossId']);
   }
@@ -68,19 +64,19 @@ export class Channel {
     // complete list
     list += `${Emoji.get('white_check_mark')}  ${i18n.t('list.completed')}\n`;
     _.map(completed, boss => {
-      list += `${boss.bossId}. ${Moment(boss.start).format('HH:mm')}\t${boss.location} ${boss.getEmojiName() || ''}\n`;
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${boss.getEmojiName() || ''}\n`;
     });
 
     // battle list
     list += `\n${Emoji.get('crossed_swords')}  ${i18n.t('list.battle')}\n`;
     _.map(battling, boss => {
-      list += `${boss.bossId}. ${Moment(boss.start).format('HH:mm')}\t${boss.location} ${boss.getEmojiName() || ''}\n`;
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${boss.getEmojiName() || ''}\n`;
     });
 
     // pending list
     list += `\n${Emoji.get('alarm_clock')}  ${i18n.t('list.pending')}\n`;
     _.map(pending, boss => {
-      list += `${boss.bossId}. ${Moment(boss.start).format('HH:mm')}\t${boss.location}\n`;
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location}\n`;
     });
 
     return list;

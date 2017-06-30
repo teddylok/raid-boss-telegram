@@ -19,7 +19,7 @@ import * as Request from 'request-promise';
 import * as util from 'util';
 import { TimeSlots } from './domain/timeslot';
 import { Time } from './domain/time';
-import { BotHelper } from "./util/bot-helper";
+import { BotHelper } from './util/bot-helper';
 
 const app = Express();
 
@@ -205,16 +205,11 @@ bot.onText(/\/team/, (msg) => {
   });
 });
 
-bot.onText(/\/delboss (\d)/, (msg, match) => {
+bot.onText(/\/delboss/, (msg, match) => {
   const id = match[1];
   const channelId = msg.chat.id;
 
-  Models.Boss.destroy({
-    where: { id }
-  })
-    .then(() => getChannel(channelId).removeBoss(id))
-    .then(() => bot.sendMessage(channelId, `${Emoji.get('skull_and_crossbones')}  ${i18n.t('boss.deleted', { id })}`))
-    .catch(err => console.log(err));
+  
 });
 
 bot.onText(/\/setting/, (msg) => {
@@ -255,7 +250,7 @@ bot.on('callback_query', (msg) => {
       });
       break;
     case 'TEAM':
-      boss = channel.getBossByBossId(_.toInteger(match[1]));
+      boss = channel.getBossById(_.toInteger(match[1]));
       bot.editMessageText(boss.toString(), {
         chat_id: chatId,
         message_id: msg.message.message_id
@@ -270,9 +265,17 @@ bot.on('callback_query', (msg) => {
           });
         });
       break;
+    case 'DELBOSS':
+      // Models.Boss.destroy({
+      //   where: { id }
+      // })
+      //   .then(() => getChannel(channelId).removeBoss(id))
+      //   .then(() => bot.sendMessage(channelId, `${Emoji.get('skull_and_crossbones')}  ${i18n.t('boss.deleted', { id })}`))
+      //   .catch(err => console.log(err));
+      break;
     case 'JOIN':
       // show time slot options
-      boss = channel.getBossByBossId(_.toInteger(match[1]));
+      boss = channel.getBossById(_.toInteger(match[1]));
 
       bot.editMessageText(`${boss.toString()}\n\n`, {
         reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList() }),
@@ -426,7 +429,7 @@ function loadChannels() {
 }
 
 function setBoss(channel: Channel, bossId: number, pokemonId: number) {
-  const boss = channel.getBossByBossId(bossId);
+  const boss = channel.getBossById(bossId);
   const pokemon = pokedex.getPokemonById(pokemonId);
 
   return Models.Boss.update({
@@ -536,7 +539,7 @@ function setTeam(from, teamId: number) {
 
 function joinBoss(msg: any, bossId: number, option: number) {
   const channel = getChannel(msg.message.chat.id);
-  const boss = channel.getBossByBossId(bossId);
+  const boss = channel.getBossById(bossId);
 
   let group = null;
   let userInstance = null;
