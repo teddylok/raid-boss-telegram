@@ -232,7 +232,7 @@ bot.on('callback_query', (msg) => {
       const keys = [];
 
       _.map(level4Pokemons, (pokemon: Pokemon) => {
-        keys.push({ text: pokemon.zhHkName, callbackData: `SETBOSS_${boss.bossId}_${pokemon.id}` });
+        keys.push({ text: pokemon.zhHkName, callbackData: `SETBOSS_${boss.id}_${pokemon.id}` });
       });
 
       const message = i18n.t('boss.whatIsTheBoss', {
