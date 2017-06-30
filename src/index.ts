@@ -189,7 +189,6 @@ bot.onText(/\/team/, (msg) => {
   const channel = getChannel(channelId);
 
   let keys = channel.getUpcomingBossList('TEAM');
-  console.log(keys);
   bot.sendMessage(channelId, i18n.t('team.pleaseSelect'), {
     reply_markup: JSON.stringify({ inline_keyboard: keys }),
     chat_id: msg.chat.id,
@@ -203,7 +202,7 @@ bot.onText(/\/delboss/, (msg, match) => {
   const channel = getChannel(channelId);
   const keys = [];
 
-  _.map(channel.boss, (boss: Boss) => {
+  _.map(_.sortBy(channel.boss, ['start']), (boss: Boss) => {
     let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
     keys.push({ text, callbackData: `DELBOSS_${boss.id}`});
   });

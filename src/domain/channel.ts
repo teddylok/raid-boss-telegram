@@ -34,23 +34,23 @@ export class Channel {
   }
 
   getCompletedBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Time.now() > Moment(boss.start).add(1, 'hour')), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Time.now() > Moment(boss.start).add(1, 'hour')), ['start']);
   }
 
   getBattleBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && Time.now() > Moment(boss.start)), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && Time.now() > Moment(boss.start)), ['start']);
   }
 
   getPendingBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start) >= Time.now()), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start) >= Time.now()), ['start']);
   }
 
   getUpcomingBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now()), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now()), ['start']);
   }
 
   getBattleAndCompletedBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Time.now() > Moment(boss.start)), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Time.now() > Moment(boss.start)), ['start']);
   }
 
   getUpcomingBossList(callbackKey: string) {
@@ -58,7 +58,7 @@ export class Channel {
     let pos = 0;
     let btnPerLine = 1;
 
-    _.map(_.sortBy(this.getUpcomingBoss(), ['start', 'bossId']), (boss: Boss) => {
+    _.map(_.sortBy(this.getUpcomingBoss(), ['start']), (boss: Boss) => {
       let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
       let row = pos / btnPerLine || 0;
       if (!key[row]) key[row] = [];
