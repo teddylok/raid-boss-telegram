@@ -3,9 +3,13 @@ import * as Moment from 'moment';
 import * as _ from 'lodash';
 import { Boss } from './boss';
 import * as i18n from 'i18next';
+import { Time } from "./time";
 
 export class Channel {
   bot: any;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date;
   id: string;
   name: string;
   boss: Boss[];
@@ -30,27 +34,40 @@ export class Channel {
   }
 
   getCompletedBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => this.getCurrentTime() > Moment(boss.start).add(1, 'hour')), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Time.now() > Moment(boss.start).add(1, 'hour')), ['start', 'bossId']);
   }
 
   getBattleBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= this.getCurrentTime() && this.getCurrentTime() > Moment(boss.start)), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && Time.now() > Moment(boss.start)), ['start', 'bossId']);
   }
 
   getPendingBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start) >= this.getCurrentTime()), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start) >= Time.now()), ['start', 'bossId']);
   }
 
   getUpcomingBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= this.getCurrentTime()), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now()), ['start', 'bossId']);
   }
 
   getBattleAndCompletedBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => this.getCurrentTime() > Moment(boss.start)), ['start', 'bossId']);
+    return _.sortBy(_.filter(this.boss, (boss: Boss) => Time.now() > Moment(boss.start)), ['start', 'bossId']);
   }
 
-  getCurrentTime() {
-    return Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour');
+  getUpcomingBossList(callbackKey: string) {
+    const key = [];
+    let pos = 0;
+    let btnPerLine = 1;
+
+    _.map(_.sortBy(this.getUpcomingBoss(), ['start', 'bossId']), (boss: Boss) => {
+      let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
+      let row = pos / btnPerLine || 0;
+      if (!key[row]) key[row] = [];
+
+      key[row].push({ text: text, callback_data: `${callbackKey}_${boss.id}` });
+      pos++;
+    });
+
+    return key;
   }
 
   toString(description: string) {

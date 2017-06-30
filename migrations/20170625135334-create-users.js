@@ -11,7 +11,7 @@ module.exports = {
       last_name: {type: Sequelize.STRING(50)},
       username: {type: Sequelize.STRING(50), unique: true},
       language_code: {type: Sequelize.STRING(50)},
-      team_id: {type: Sequelize.INTEGER}
+      team_id: {type: Sequelize.INTEGER, defaultValue: 1}
     });
   },
 

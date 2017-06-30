@@ -4,7 +4,7 @@ import { ModelsInterface } from '../models';
 import { GroupUserInstance } from "./group-user";
 
 export interface UserAttribute {
-  id: number;
+  id: string;
   created_at?: Date;
   updated_at?: Date;
   deleted_at?: Date;

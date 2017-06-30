@@ -7,9 +7,13 @@ import { User } from './user';
 import { Pokedex } from './pokedex';
 import { GroupInstance } from '../models/entity/group';
 import { TimeSlots } from "./timeslot";
+import { BotHelper } from "../util/bot-helper";
 
 export class Boss {
   id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date;
   bossId: number;
   bot: any;
   channelId: string;
@@ -108,21 +112,14 @@ export class Boss {
     return `${this.getEmoji()} ${this.name} ${star}`;
   }
 
-  getTimeSlotList() {
+  getTimeSlotList(callbackKey: string) {
     const timeSlots = new TimeSlots().getTimeSlots();
-
-    const key = [];
-    let pos = 0;
-    let btnPerLine = 1;
-
+    const keys = [];
     _.map(timeSlots, (timeSlot) => {
-      let row = pos / btnPerLine || 0;
-      if (!key[row]) key[row] = [];
-
-      key[row].push({ text: timeSlot.text, callback_data: `JOINBOSS_${this.id}_${timeSlot.id}` });
-      pos++;
+      keys.push({ text: timeSlot.text, callbackData: `${callbackKey}_${this.id}_${timeSlot.id}` });
     });
-    return key;
+
+    return BotHelper.getInlineKeyboard(keys, 1);
   }
 
   toString() {
