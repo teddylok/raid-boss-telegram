@@ -34,6 +34,7 @@
     "es6-promise": "4.0.5",
     "express": "4.15.3",
     "forever": "0.15.1",
+    "hubot-heroku-keepalive": "^1.0.3",
     "i18next": "8.4.2",
     "lodash": "4.17.4",
     "moment": "2.18.1",
