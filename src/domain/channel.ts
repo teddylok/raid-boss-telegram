@@ -26,7 +26,7 @@ export class Channel {
   }
 
   removeBoss(id) {
-    this.boss = _.remove(this.boss, (boss) => boss.id === id);
+    this.boss = _.filter(this.boss, (boss) => boss.id !== id);
   }
 
   getBossById(id: number) {
