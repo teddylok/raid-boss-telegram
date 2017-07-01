@@ -93,7 +93,7 @@ bot.onText(/(.*)/, (msg, match) => {
         console.log(err);
       }
     }
-  // }
+  }
 });
 
 bot.onText(/\/start/, (msg) => {
