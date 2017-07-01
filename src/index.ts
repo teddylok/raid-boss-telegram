@@ -26,12 +26,6 @@ import * as base64 from 'base-64';
 
 const app = Express();
 
-// app.get('/', (req, res) => {
-//   res.send('Raid Boss Bot is up.');
-// });
-
-// const host = process.env.HOST;
-// const port = process.env.PORT || 80;
 const token = process.env.BOT_TOKEN;
 const locales = [Locale.EN_US, Locale.JA_JP, Locale.ZH_CN, Locale.ZH_HK];
 const channels = [];
