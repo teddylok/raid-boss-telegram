@@ -9,6 +9,7 @@ export class Pokemon {
   zhHkName: string;
   zhCnName: string;
   jaName: string;
+  emoji: string;
 }
 
 export class Pokedex {
@@ -20,29 +21,29 @@ export class Pokedex {
     this.pokemons = [];
 
     const raidBosses = [
-      { id: 129, level: 1, name: 'Magikarp', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 153, level: 1, name: 'Bayleef', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 156, level: 1, name: 'Quilava', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 159, level: 1, name: 'Croconaw', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 89, level: 2, name: 'Muk', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 103, level: 2, name: 'Exeggutor', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 110, level: 2, name: 'Weezing', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 125, level: 2, name: 'Electabuzz', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 126, level: 2, name: 'Magmar', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 59, level: 3, name: 'Arcanine', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 65, level: 3, name: 'Alakazam', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 68, level: 3, name: 'Machamp', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 94, level: 3, name: 'Gengar', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 134, level: 3, name: 'Vaporeon', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 135, level: 3, name: 'Jolteon', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 136, level: 3, name: 'Flareon', zhHkName: '', zhCnName: '', jaName: '' },
-      { id: 3, level: 4, name: 'Venusaur', zhHkName: '奇異花', zhCnName: '', jaName: '' },
-      { id: 6, level: 4, name: 'Charizard', zhHkName: '噴火龍', zhCnName: '', jaName: '' },
-      { id: 9, level: 4, name: 'Blastoise', zhHkName: '水箭龜', zhCnName: '', jaName: '' },
-      { id: 112, level: 4, name: 'Rhydon', zhHkName: '鐵甲暴龍', zhCnName: '', jaName: '' },
-      { id: 131, level: 4, name: 'Lapras', zhHkName: '背背龍', zhCnName: '', jaName: '' },
-      { id: 143, level: 4, name: 'Snorlax', zhHkName: '卡比獸', zhCnName: '', jaName: '' },
-      { id: 248, level: 4, name: 'Tyranitar', zhHkName: '班吉拉', zhCnName: '', jaName: '' }
+      { id: 129, level: 1, name: 'Magikarp', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 153, level: 1, name: 'Bayleef', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 156, level: 1, name: 'Quilava', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 159, level: 1, name: 'Croconaw', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 89, level: 2, name: 'Muk', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 103, level: 2, name: 'Exeggutor', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 110, level: 2, name: 'Weezing', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 125, level: 2, name: 'Electabuzz', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 126, level: 2, name: 'Magmar', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 59, level: 3, name: 'Arcanine', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 65, level: 3, name: 'Alakazam', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 68, level: 3, name: 'Machamp', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 94, level: 3, name: 'Gengar', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 134, level: 3, name: 'Vaporeon', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 135, level: 3, name: 'Jolteon', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 136, level: 3, name: 'Flareon', zhHkName: '', zhCnName: '', jaName: '', emoji: '' },
+      { id: 3, level: 4, name: 'Venusaur', zhHkName: '奇異花', zhCnName: '', jaName: '', emoji: 'hibiscus' },
+      { id: 6, level: 4, name: 'Charizard', zhHkName: '噴火龍', zhCnName: '', jaName: '', emoji: 'fire' },
+      { id: 9, level: 4, name: 'Blastoise', zhHkName: '水箭龜', zhCnName: '', jaName: '', emoji: 'droplet' },
+      { id: 112, level: 4, name: 'Rhydon', zhHkName: '鐵甲暴龍', zhCnName: '', jaName: '', emoji: 'mountain' },
+      { id: 131, level: 4, name: 'Lapras', zhHkName: '背背龍', zhCnName: '', jaName: '', emoji: 'snowflake' },
+      { id: 143, level: 4, name: 'Snorlax', zhHkName: '卡比獸', zhCnName: '', jaName: '', emoji: 'panda_face' },
+      { id: 248, level: 4, name: 'Tyranitar', zhHkName: '班吉拉', zhCnName: '', jaName: '', emoji: 'hatched_chick' },
     ];
 
     _.map(raidBosses, boss => {
@@ -53,6 +54,7 @@ export class Pokedex {
       pokemon.zhHkName = boss.zhHkName;
       pokemon.zhCnName = boss.zhCnName;
       pokemon.jaName = boss.jaName;
+      pokemon.emoji = boss.emoji;
 
       this.pokemons.push(pokemon);
     });
