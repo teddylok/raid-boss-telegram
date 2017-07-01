@@ -14,7 +14,7 @@ export class Boss {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date;
-  bossId: number;
+  hash: string;
   bot: any;
   channelId: string;
   location: string;
@@ -24,10 +24,10 @@ export class Boss {
   start: Date;
   groups: Group[];
 
-  constructor(bot: any, pokedex: Pokedex, id: number, channelId: string, bossId: number, start: Date, location: string) {
+  constructor(bot: any, pokedex: Pokedex, id: number, channelId: string, hash: string, start: Date, location: string) {
     this.id = id;
     this.bot = bot;
-    this.bossId = bossId;
+    this.hash = hash;
     this.channelId = channelId;
     this.location = location;
     this.pokedex = pokedex;
@@ -73,43 +73,10 @@ export class Boss {
     return _.map(this.groups, 'id');
   }
 
-  getEmoji() {
-    let emoji = '';
-
-    switch (this.pokemonId) {
-      case 3:
-        emoji = Emoji.get('seedling');
-        break;
-      case 6:
-        emoji = Emoji.get('fire');
-        break;
-      case 9:
-        emoji = Emoji.get('droplet');
-        break;
-      case 112:
-        emoji = Emoji.get('mountain');
-        break;
-      case 131:
-        emoji = Emoji.get('snowflake');
-        break;
-      case 143:
-        emoji = Emoji.get('panda_face');
-        break;
-      case 248:
-        emoji = Emoji.get('hatched_chick');
-        break;
-      default:
-        emoji = Emoji.get('red_circle');
-        break;
-    }
-
-    return emoji;
-  }
-
   getEmojiName() {
     if (!this.pokemonId) return '';
     const star = (_.indexOf([131, 143, 248], this.pokemonId) > -1) ? `${Emoji.get('star')}` : '';
-    return `${this.getEmoji()} ${this.name} ${star}`;
+    return `${Emoji.get(this.pokedex.getPokemonById(this.pokemonId).emoji)} ${this.name} ${star}`;
   }
 
   getTimeSlotList(callbackKey: string) {

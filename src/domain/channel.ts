@@ -33,24 +33,32 @@ export class Channel {
     return _.find(this.boss, boss => boss.id === id );
   }
 
+  getBossByHash(hash: string) {
+    return _.find(this.boss, boss => boss.hash === hash );
+  }
+
+  getBoss() {
+    return _.filter(this.boss, (boss: Boss) => Moment(boss.start).format('YYYY-MM-DD') === Moment().format('YYYY-MM-DD'));
+  }
+
   getCompletedBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Time.now() > Moment(boss.start).add(1, 'hour')), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Time.now() > Moment(boss.start).add(1, 'hour')), ['start']);
   }
 
   getBattleBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && Time.now() > Moment(boss.start)), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && Time.now() > Moment(boss.start)), ['start']);
   }
 
   getPendingBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start) >= Time.now()), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start) >= Time.now()), ['start']);
   }
 
   getUpcomingBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now()), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now()), ['start']);
   }
 
   getBattleAndCompletedBoss() {
-    return _.sortBy(_.filter(this.boss, (boss: Boss) => Time.now() > Moment(boss.start)), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Time.now() > Moment(boss.start)), ['start']);
   }
 
   getUpcomingBossList(callbackKey: string) {
@@ -70,7 +78,7 @@ export class Channel {
     return key;
   }
 
-  toString(description: string) {
+  toString(description?: string) {
     const completed = this.getCompletedBoss();
     const battling = this.getBattleBoss();
     const pending = this.getPendingBoss();

@@ -44,7 +44,7 @@ export class BossRepository {
   }
 
   getDomainObject(instance: BossInstance): Boss {
-    const boss = new Boss(this.bot, this.pokedex, instance.id, instance.channel_id, instance.boss_id, instance.start, instance.location);
+    const boss = new Boss(this.bot, this.pokedex, instance.id, instance.channel_id, instance.hash, instance.start, instance.location);
 
     boss.id = instance.id;
     boss.createdAt = instance.created_at;
@@ -64,7 +64,7 @@ export class BossRepository {
       created_at: boss.createdAt,
       updated_at: boss.updatedAt,
       deleted_at: boss.deletedAt,
-      boss_id: boss.bossId,
+      hash: boss.hash,
       channel_id: boss.channelId,
       location: boss.location,
       pokemon_id: boss.pokemonId,

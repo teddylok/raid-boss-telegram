@@ -22,15 +22,10 @@ import { UserRepository } from './models/repository/user-repository';
 import { GroupRepository } from './models/repository/group-repository';
 import { BossRepository } from './models/repository/boss-repository';
 import { BossInstance } from './models/entity/boss';
+import * as base64 from 'base-64';
 
 const app = Express();
 
-app.get('/', (req, res) => {
-  res.send('Raid Boss Bot is up.');
-});
-
-const host = process.env.HOST;
-const port = process.env.PORT || 80;
 const token = process.env.BOT_TOKEN;
 const locales = [Locale.EN_US, Locale.JA_JP, Locale.ZH_CN, Locale.ZH_HK];
 const channels = [];
@@ -54,6 +49,53 @@ const bossRepository = new BossRepository(bot, pokedex);
 loadDataFromDatabase();
 
 // bot listener
+bot.onText(/(.*)/, (msg, match) => {
+  if (_.toString(msg.chat.id) === _.toString(process.env.TAI_PO_RAID_ALERT_CHAT_ID)) {
+    try {
+      const channel = getChannel(msg.chat.id);
+      const data = JSON.parse(base64.decode(msg.text));
+      const hash = data[0];
+      const gymName = data[1];
+      const lat = _.toInteger(data[2]);
+      const lng = _.toInteger(data[3]);
+      const level = _.toInteger(data[5]);
+      const pokemonId = _.toInteger(data[6]);
+      let boss = null;
+
+      if (4 === level) {
+        getAddress(lat, lng)
+          .then(address => {
+            address = _.replace(address, /香港|九龍|新界|大埔/g, 'qu');
+            bot.sendMessage(channel.id, `${hash} ${gymName} ${lat} ${level} ${pokemonId} ${address}`);
+
+            boss = channel.getBossByHash(hash);
+            if (!boss) {
+              return addBoss(msg, channel, Moment(data[4]).format('HH:mm'), `${address} ${gymName}`, hash);
+            }
+          })
+          .then(() => {
+            console.log(channel.boss);
+            boss = channel.getBossByHash(hash);
+            if (pokemonId) {
+              return setBoss(channel, boss.id, pokemonId)
+                .then(() => {
+                  bot.sendMessage(channel.id, channel.toString(), {
+                    chat_id: msg.chat.id,
+                    message_id: msg.message_id
+                  });
+                });
+            }
+          })
+          .catch(err => console.log(err));
+      }
+    } catch (err) {
+      if (err.message !== 'Invalid character: the string to be decoded is not correctly encoded.') {
+        console.log(err);
+      }
+    }
+  }
+});
+
 bot.onText(/\/start/, (msg) => {
   const id = msg.chat.id;
   const name = msg.chat.title;
@@ -102,45 +144,7 @@ bot.onText(/\/raid (\d\d:\d\d) (.+)/, (msg, match) => {
   const location = match[2];
 
   if (!channel) return askForRegistration(msg.chat.id);
-
-  const start = Moment();
-  start.hour(time.substring(0, 2));
-  let minutes = time.substring(3, 5);
-  start.minute(minutes);
-  start.second(0);
-  start.millisecond(0);
-
-  let bossInstance = null;
-  let boss: Boss = new Boss(bot, pokedex, null, channel.id, channel.boss.length + 1, start.toDate(), location);
-
-  bossRepository
-    .save(boss)
-    .then((instance: BossInstance) => {
-      boss = new Boss(bot, pokedex, instance.id, instance.channel_id, instance.boss_id, instance.start, instance.location);
-      channel.addBoss(boss);
-      bossInstance = instance;
-
-      const groups = [];
-      _.map(boss.groups, (group: any) => {
-        groups.push({
-          boss_id: group.bossId,
-          name: group.name,
-          seq: group.seq
-        });
-      });
-
-      return groups;
-    })
-    .then((groups: Group[]) => groupRepository.bulkCreate(groups))
-    .then(groupInstances => {
-      _.map(groupInstances, (groupInstance: any) => {
-        _.find(boss.groups, group => group.seq === groupInstance.seq).id = groupInstance.id;
-      });
-    })
-    .then(() => bot.sendMessage(channel.id, channel.toString(), {
-      chat_id: msg.chat.id,
-      message_id: msg.message_id
-    }));
+  addBoss(msg, channel, time, location, null);
 });
 
 bot.onText(/\/list(.+)?/, (msg, match) => {
@@ -202,9 +206,9 @@ bot.onText(/\/delboss/, (msg, match) => {
   const channel = getChannel(channelId);
   const keys = [];
 
-  _.map(_.sortBy(channel.boss, ['start']), (boss: Boss) => {
+  _.map(_.sortBy(channel.getBoss(), ['start']), (boss: Boss) => {
     let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
-    keys.push({ text, callbackData: `DELBOSS_${boss.id}`});
+    keys.push({ text, callbackData: `DELBOSS_${boss.id}` });
   });
 
   bot.sendMessage(msg.chat.id, i18n.t('team.pleaseSelect'), {
@@ -410,7 +414,7 @@ function loadChannels() {
 
         _.map(channelInstance.Bosses, (bossInstance: any) => {
           const boss = bossRepository.getDomainObject(bossInstance);
-          channel.boss.push(boss);
+          channel.addBoss(boss);
 
           _.map(bossInstance.Groups, (groupInstance: any) => {
             const group = boss.addGroup(groupInstance);
@@ -422,6 +426,50 @@ function loadChannels() {
         });
       });
     });
+}
+
+function addBoss(msg: any, channel: Channel, time: string, location: string, bossHash: string) {
+  const hash = (bossHash) ? bossHash : _.toString(channel.getBoss().length + 1);
+
+  const start = Moment();
+  start.hour(_.toInteger(time.substring(0, 2)));
+  start.minute(_.toInteger(time.substring(3, 5)));
+  start.second(0);
+  start.millisecond(0);
+
+  let bossInstance = null;
+  let boss: Boss = new Boss(bot, pokedex, null, channel.id, hash, start.toDate(), location);
+
+  bossRepository
+    .save(boss)
+    .then((instance: BossInstance) => {
+      boss.id = instance.id;
+      boss.createdAt = instance.created_at;
+      boss.updatedAt = instance.updated_at;
+      channel.addBoss(boss);
+      bossInstance = instance;
+
+      const groups = [];
+      _.map(boss.groups, (group: any) => {
+        groups.push({
+          boss_id: group.bossId,
+          name: group.name,
+          seq: group.seq
+        });
+      });
+
+      return groups;
+    })
+    .then((groups: Group[]) => groupRepository.bulkCreate(groups))
+    .then(groupInstances => {
+      _.map(groupInstances, (groupInstance: any) => {
+        _.find(boss.groups, group => group.seq === groupInstance.seq).id = groupInstance.id;
+      });
+    })
+    .then(() => bot.sendMessage(channel.id, channel.toString(), {
+      chat_id: msg.chat.id,
+      message_id: msg.message_id
+    }));
 }
 
 function setBoss(channel: Channel, bossId: number, pokemonId: number) {
@@ -513,35 +561,14 @@ function joinBoss(msg: any, bossId: number, option: number) {
     .then((instance: GroupInstance) => instance.addUser(userInstance, { option }))
     .then(() => group.addUser(userRepository.getDomainObject(userInstance, option)))
     .then(() => bot.editMessageText(`${boss.toString()} ${i18n.t('lastUpdated')}: ${Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour').format('HH:mm:ss')}`, {
-        chat_id: channel.id,
-        message_id: msg.message.message_id,
-        reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
-      }))
+      chat_id: channel.id,
+      message_id: msg.message.message_id,
+      reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
+    }))
     .catch(err => console.log(err));
 }
 
-const server = app.listen(port, () => {
-  console.log(`${Emoji.get('robot_face')}  Hi! I am up ${host}:${port}`);
-});
-
-// schedule to ping Heroku every 15min except 00:00 to 06:00
-// const schedulerHost = process.env.SCHEDULER_HOST;
-// const rule = new Schedule.RecurrenceRule();
-// let wakeUpTime = 5 + 8;
-// let sleepTime = 23 + 8;
-// rule.hour = [0, new Schedule.Range(wakeUpTime, sleepTime)];
-// rule.minute = [0, 15, 30, 45];
-
-// const job = Schedule.scheduleJob(rule, () => {
-//   Request(`http://${host}`)
-//     .then(response => console.log(response))
-//     .then(() => console.log(`Ping ${host} at ${Time.now()}`))
-//     .catch(err => console.log(err));
-// });
-
-// schedule to wakeUp the scheduler
-// const job2 = Schedule.scheduleJob('* * 21 * * *', () => {
-//   Request(`http://${schedulerHost}`)
-//     .then(() => console.log(`Ping ${schedulerHost} at ${Time.now()}`))
-//     .catch(err => console.log(err));
-// });
+function getAddress(lat: number, lng: number) {
+  return Request(`http://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&sensor=true`)
+    .then(response => response.formatted_address);
+}
