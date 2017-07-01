@@ -93,7 +93,7 @@ bot.onText(/(.*)/, (msg, match) => {
         console.log(err);
       }
     }
-  }
+  // }
 });
 
 bot.onText(/\/start/, (msg) => {
@@ -322,6 +322,12 @@ bot.on('callback_query', (msg) => {
   }
 });
 
+bot.on('message', (msg) => {
+  if (msg.new_chat_member) {
+    chooseTeam(msg);
+  }
+});
+
 // bot.onText(/\/language/, (msg) => {
 //   const channel = getChannel(msg.chat.id);
 //   const key = [];
@@ -438,6 +444,8 @@ function addBoss(msg: any, channel: Channel, time: string, location: string, bos
     .save(boss)
     .then((instance: BossInstance) => {
       boss.id = instance.id;
+      boss.createdAt = instance.created_at;
+      boss.updatedAt = instance.updated_at;
       channel.addBoss(boss);
       bossInstance = instance;
 
@@ -465,7 +473,6 @@ function addBoss(msg: any, channel: Channel, time: string, location: string, bos
 }
 
 function setBoss(channel: Channel, bossId: number, pokemonId: number) {
-  console.log(bossId, pokemonId);
   const boss = channel.getBossById(bossId);
   return Promise.resolve()
     .then(() => boss.setPokemon(pokemonId))
