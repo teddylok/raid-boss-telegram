@@ -50,10 +50,9 @@ loadDataFromDatabase();
 
 // bot listener
 bot.onText(/(.*)/, (msg, match) => {
-  const channel = getChannel(msg.chat.id);
-
-  try {
-    if (_.toString(msg.chat.id) === _.toString(process.env.TAI_PO_RAID_ALERT_CHAT_ID)) {
+  if (_.toString(msg.chat.id) === _.toString(process.env.TAI_PO_RAID_ALERT_CHAT_ID)) {
+    try {
+      const channel = getChannel(msg.chat.id);
       const data = JSON.parse(base64.decode(msg.text));
       const hash = data[0];
       const gymName = data[1];
@@ -89,10 +88,10 @@ bot.onText(/(.*)/, (msg, match) => {
           })
           .catch(err => console.log(err));
       }
-    }
-  } catch (err) {
-    if (err.message !== 'Invalid character: the string to be decoded is not correctly encoded.') {
-      console.log(err);
+    } catch (err) {
+      if (err.message !== 'Invalid character: the string to be decoded is not correctly encoded.') {
+        console.log(err);
+      }
     }
   }
 });
@@ -209,7 +208,7 @@ bot.onText(/\/delboss/, (msg, match) => {
 
   _.map(_.sortBy(channel.getBoss(), ['start']), (boss: Boss) => {
     let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
-    keys.push({ text, callbackData: `DELBOSS_${boss.id}`});
+    keys.push({ text, callbackData: `DELBOSS_${boss.id}` });
   });
 
   bot.sendMessage(msg.chat.id, i18n.t('team.pleaseSelect'), {
@@ -555,10 +554,10 @@ function joinBoss(msg: any, bossId: number, option: number) {
     .then((instance: GroupInstance) => instance.addUser(userInstance, { option }))
     .then(() => group.addUser(userRepository.getDomainObject(userInstance, option)))
     .then(() => bot.editMessageText(`${boss.toString()} ${i18n.t('lastUpdated')}: ${Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour').format('HH:mm:ss')}`, {
-        chat_id: channel.id,
-        message_id: msg.message.message_id,
-        reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
-      }))
+      chat_id: channel.id,
+      message_id: msg.message.message_id,
+      reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
+    }))
     .catch(err => console.log(err));
 }
 
