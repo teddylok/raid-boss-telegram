@@ -28,5 +28,6 @@
   "timeslot.30min": "30 分鐘到",
   "timeslot.45min": "45 分鐘到",
   "greeting": "你好!",
-  "noneOfYourBusiness": "關你咩事!"
+  "noneOfYourBusiness": "關你咩事!",
+  "channel.type.updated": "Channel type updated."
 }

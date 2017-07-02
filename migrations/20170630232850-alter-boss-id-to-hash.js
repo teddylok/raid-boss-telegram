@@ -6,6 +6,6 @@ module.exports = {
   },
 
   down: function (queryInterface, Sequelize) {
-    // return queryInterface.dropTable('bosses');
+    return queryInterface.renameColumn('bosses', 'hash', 'boss_id');
   }
 };

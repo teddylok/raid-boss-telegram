@@ -3,9 +3,12 @@ import * as Moment from 'moment';
 import * as _ from 'lodash';
 import { Boss } from './boss';
 import * as i18n from 'i18next';
-import { Time } from "./time";
+import { Time } from './time';
 
 export class Channel {
+  public static readonly CHANNEL_TYPE_ADMIN = 1;
+  public static readonly CHANNEL_TYPE_USER = 2;
+
   bot: any;
   createdAt: Date;
   updatedAt: Date;
@@ -13,12 +16,14 @@ export class Channel {
   id: string;
   name: string;
   boss: Boss[];
+  channelTypeId: number;
 
-  constructor(bot: any, id: string, name: string) {
+  constructor(bot: any, id: string, name: string, channelTypeId: number = Channel.CHANNEL_TYPE_ADMIN) {
     this.bot = bot;
     this.id = id;
     this.name = name;
     this.boss = [];
+    this.channelTypeId = channelTypeId;
   }
 
   addBoss(boss: Boss) {
@@ -76,6 +81,10 @@ export class Channel {
     });
 
     return key;
+  }
+
+  setChannelType(channelTypeId: number) {
+    this.channelTypeId = channelTypeId;
   }
 
   toString(description?: string) {

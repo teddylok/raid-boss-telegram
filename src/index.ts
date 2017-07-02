@@ -23,6 +23,8 @@ import { GroupRepository } from './models/repository/group-repository';
 import { BossRepository } from './models/repository/boss-repository';
 import { BossInstance } from './models/entity/boss';
 import * as base64 from 'base-64';
+import { ChannelInstance } from './models/entity/channel';
+import { ChannelRepository } from './models/repository/channel-repository';
 
 const app = Express();
 
@@ -41,6 +43,7 @@ i18n.init({
 const bot = new TelegramBot(token, { polling: true });
 const pokedex = new Pokedex(bot);
 
+const channelRepository = new ChannelRepository(bot);
 const userRepository = new UserRepository(bot);
 const groupRepository = new GroupRepository(bot);
 const bossRepository = new BossRepository(bot, pokedex);
@@ -49,7 +52,8 @@ const bossRepository = new BossRepository(bot, pokedex);
 loadDataFromDatabase();
 
 // bot listener
-bot.onText(/(.*)/, (msg, match) => {
+bot.on('channel_post', (msg, match) => {
+  console.log('on text msg', msg);
   if (_.toString(msg.chat.id) === _.toString(process.env.TAI_PO_RAID_ALERT_CHAT_ID)) {
     try {
       const channel = getChannel(msg.chat.id);
@@ -121,20 +125,22 @@ bot.onText(/\/start/, (msg) => {
     .findById(id)
     .then(channel => (channel) ? channel : Models.Channel.create({
       id,
-      name
+      name,
+      channel_type_id: Channel.CHANNEL_TYPE_ADMIN
     }))
-    .then(channel => channels.push(new Channel(bot, channel.id, channel.name)))
+    .then((channel: ChannelInstance) => channels.push(new Channel(bot, channel.id, channel.name, channel.channel_type_id)))
     .catch(err => console.log(err));
 
   bot.sendMessage(id, `${Emoji.get('white_check_mark')}  ${i18n.t('botRegistered')}`);
 });
 
 bot.onText(/\/raid (.+)/, (msg, match) => {
-  const channelId = msg.chat.id;
+  const channel = getChannel(msg.chat.id);
   const regex = /\d\d:\d\d (.*)/;
 
+  if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) return false;
   if (!regex.test(match)) {
-    bot.sendMessage(channelId, `${Emoji.get('bomb')}  ${i18n.t('raid.incorrectTimeFormat')}`);
+    bot.sendMessage(channel.id, `${Emoji.get('bomb')}  ${i18n.t('raid.incorrectTimeFormat')}`);
   }
 });
 
@@ -144,6 +150,8 @@ bot.onText(/\/raid (\d\d:\d\d) (.+)/, (msg, match) => {
   const location = match[2];
 
   if (!channel) return askForRegistration(msg.chat.id);
+  if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) return false;
+
   addBoss(msg, channel, time, location, null);
 });
 
@@ -160,6 +168,7 @@ bot.onText(/\/boss/, (msg) => {
   const channel = getChannel(channelId);
   const keys = [];
 
+  if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) return false;
   if (!channel.getBattleAndCompletedBoss()) {
     bot.sendMessage(channelId, i18n.t('battle.currentlyNoBattle'));
     return;
@@ -192,6 +201,7 @@ bot.onText(/\/team/, (msg) => {
   const channelId = msg.chat.id;
   const channel = getChannel(channelId);
 
+  if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) return false;
   let keys = channel.getUpcomingBossList('TEAM');
   bot.sendMessage(channelId, i18n.t('team.pleaseSelect'), {
     reply_markup: JSON.stringify({ inline_keyboard: keys }),
@@ -206,9 +216,10 @@ bot.onText(/\/delboss/, (msg, match) => {
   const channel = getChannel(channelId);
   const keys = [];
 
+  if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) return false;
+
   _.map(_.sortBy(channel.getBoss(), ['start']), (boss: Boss) => {
-    let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
-    keys.push({ text, callbackData: `DELBOSS_${boss.id}` });
+    keys.push({ text: `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`, callbackData: `DELBOSS_${boss.id}` });
   });
 
   bot.sendMessage(msg.chat.id, i18n.t('team.pleaseSelect'), {
@@ -220,6 +231,15 @@ bot.onText(/\/delboss/, (msg, match) => {
 
 bot.onText(/\/setting/, (msg) => {
   chooseTeam(msg);
+});
+
+bot.onText(/\/setchanneltype (\d)/, (msg, match) => {
+  const channel = getChannel(msg.chat.id);
+  channel.setChannelType(_.toInteger(match[1]));
+  channelRepository
+    .save(channel)
+    .then(() => bot.sendMessage(channel.id, `${Emoji.get('ok')} ${i18n.t('channel.type.updated')}`))
+    .catch(err => console.log(err));
 });
 
 bot.on('callback_query', (msg) => {
@@ -410,6 +430,8 @@ function loadChannels() {
     .then(channelInstances => {
       _.map(channelInstances, (channelInstance: any) => {
         const channel = new Channel(bot, channelInstance.id, channelInstance.name);
+        channel.createdAt = channelInstance.created_at;
+        channel.updatedAt = channelInstance.updated_at;
         channels.push(channel);
 
         _.map(channelInstance.Bosses, (bossInstance: any) => {
