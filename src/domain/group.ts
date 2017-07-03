@@ -56,7 +56,8 @@ export class Group {
     let list = `${this.getFlag()}  ${this.name} (${users.length})\n`;
 
     _.map(users, (user: User) => {
-      list += ` - ${count}. ${user.firstName}\n`;
+      const username = (user.username) ? ` (@${user.username})` : '';
+      list += ` - ${count}. ${user.firstName}${username}\n`;
       count++;
     });
 
