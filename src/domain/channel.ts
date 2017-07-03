@@ -94,6 +94,8 @@ export class Channel {
 
     let list: string = (description) ? `${description}\n\n` : '';
     list += `${i18n.t('today')} ${Emoji.get('four')} ${Emoji.get('star')} ${Emoji.get('hatching_chick')} \n`;
+    list += `${i18n.t('date')}: ${Moment().format('YYYY-MM-DD')} \n`;
+    list += `===============\n`;
 
     // complete list
     list += `${Emoji.get('white_check_mark')}  ${i18n.t('list.completed')}\n`;
@@ -112,6 +114,9 @@ export class Channel {
     _.map(pending, boss => {
       list += `${Moment(boss.start).format('HH:mm')}\t${boss.location}\n`;
     });
+
+    list += `===============\n`;
+    list += `${i18n.t('lastUpdated')}: ${Moment().format('HH:mm:ss')} \n`;
 
     return list;
   }

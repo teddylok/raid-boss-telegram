@@ -29,5 +29,6 @@
   "timeslot.45min": "45 MIN",
   "greeting": "Hello!",
   "noneOfYourBusiness": "None of your business!",
-  "channel.type.updated": "Channel type updated"
+  "channel.type.updated": "Channel type updated",
+  "date": "Date"
 }
