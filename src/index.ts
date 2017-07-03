@@ -25,6 +25,10 @@ import { BossInstance } from './models/entity/boss';
 import * as base64 from 'base-64';
 import { ChannelInstance } from './models/entity/channel';
 import { ChannelRepository } from './models/repository/channel-repository';
+import { MD5 } from 'crypto-js';
+import { SyncChannelRepository } from "./models/repository/sync-channel-repository";
+import { SyncChannel } from "./domain/sync-channel";
+import { SyncChannelInstance } from "./models/entity/sync-channel";
 
 const app = Express();
 
@@ -47,6 +51,7 @@ const channelRepository = new ChannelRepository(bot);
 const userRepository = new UserRepository(bot);
 const groupRepository = new GroupRepository(bot);
 const bossRepository = new BossRepository(bot, pokedex);
+const syncChannelRepository = new SyncChannelRepository(bot);
 
 // load data from database
 loadDataFromDatabase();
@@ -74,7 +79,11 @@ bot.on('channel_post', (msg, match) => {
 
             boss = channel.getBossByHash(hash);
             if (!boss) {
-              return addBoss(msg, channel, Moment(data[4]).format('HH:mm'), `${address} ${gymName}`, hash);
+              return addBoss(channel, Moment(data[4]).format('HH:mm'), `${address} ${gymName}`, hash)
+                .then(() => bot.sendMessage(channel.id, channel.toString(), {
+                  chat_id: msg.chat.id,
+                  message_id: msg.message_id
+                }));
             }
           })
           .then(() => {
@@ -128,7 +137,13 @@ bot.onText(/\/start/, (msg) => {
       name,
       channel_type_id: Channel.CHANNEL_TYPE_ADMIN
     }))
-    .then((channel: ChannelInstance) => channels.push(new Channel(bot, channel.id, channel.name, channel.channel_type_id)))
+    .then((channelInstance: ChannelInstance) => {
+      const channel = new Channel(bot, channelInstance.id, channelInstance.name, channelInstance.channel_type_id);
+      channel.createdAt = channelInstance.created_at;
+      channel.updatedAt = channelInstance.updated_at;
+      channel.channelTypeId = channelInstance.channel_type_id;
+      channels.push(channel);
+    })
     .catch(err => console.log(err));
 
   bot.sendMessage(id, `${Emoji.get('white_check_mark')}  ${i18n.t('botRegistered')}`);
@@ -137,7 +152,6 @@ bot.onText(/\/start/, (msg) => {
 bot.onText(/\/raid (.+)/, (msg, match) => {
   const channel = getChannel(msg.chat.id);
   const regex = /\d\d:\d\d (.*)/;
-
   if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) return false;
   if (!regex.test(match)) {
     bot.sendMessage(channel.id, `${Emoji.get('bomb')}  ${i18n.t('raid.incorrectTimeFormat')}`);
@@ -152,7 +166,11 @@ bot.onText(/\/raid (\d\d:\d\d) (.+)/, (msg, match) => {
   if (!channel) return askForRegistration(msg.chat.id);
   if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) return false;
 
-  addBoss(msg, channel, time, location, null);
+  addBoss(channel, time, location, null)
+    .then(() => bot.sendMessage(channel.id, channel.toString(), {
+      chat_id: msg.chat.id,
+      message_id: msg.message_id
+    }));
 });
 
 bot.onText(/\/list(.+)?/, (msg, match) => {
@@ -189,9 +207,10 @@ bot.onText(/\/boss/, (msg) => {
 bot.onText(/\/join/, (msg) => {
   const channelId = msg.chat.id;
   const channel = getChannel(channelId);
+  const keys = channel.getUpcomingBossList('JOIN');
 
-  bot.sendMessage(channelId, i18n.t('join.pleaseSelect'), {
-    reply_markup: JSON.stringify({ inline_keyboard: channel.getUpcomingBossList('JOIN') }),
+  bot.sendMessage(channelId, (keys) ? i18n.t('join.pleaseSelect') : i18n.t('battle.currentlyNoBattle'), {
+    reply_markup: JSON.stringify({ inline_keyboard: keys }),
     chat_id: msg.chat.id,
     message_id: msg.message_id
   });
@@ -216,7 +235,9 @@ bot.onText(/\/delboss/, (msg, match) => {
   const channel = getChannel(channelId);
   const keys = [];
 
-  if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) return false;
+  if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) {
+    return false;
+  }
 
   _.map(_.sortBy(channel.getBoss(), ['start']), (boss: Boss) => {
     keys.push({ text: `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`, callbackData: `DELBOSS_${boss.id}` });
@@ -227,6 +248,26 @@ bot.onText(/\/delboss/, (msg, match) => {
     chat_id: msg.chat.id,
     message_id: msg.message_id
   });
+});
+
+bot.onText(/\/sync/, (msg) => {
+  const channelId = msg.chat.id;
+
+  syncChannelRepository
+    .getByChannelId(channelId)
+    .then((syncChannels: SyncChannelInstance[]) => {
+      _.map(syncChannels, (syncChannel: SyncChannelInstance) => {
+        const channel = getChannel(syncChannel.channel_id);
+        const targetChannel = getChannel(syncChannel.target_channel_id);
+
+        Promise.resolve()
+          .then(() => syncBoss(channel, targetChannel))
+          .then(() => syncBoss(targetChannel, channel))
+          .then(() => bot.sendMessage(targetChannel.id, targetChannel.toString()))
+          .then(() => bot.sendMessage(channel.id, channel.toString()))
+          .catch(err => console.log(err));
+      });
+    });
 });
 
 bot.onText(/\/setting/, (msg) => {
@@ -432,6 +473,7 @@ function loadChannels() {
         const channel = new Channel(bot, channelInstance.id, channelInstance.name);
         channel.createdAt = channelInstance.created_at;
         channel.updatedAt = channelInstance.updated_at;
+        channel.channelTypeId = channelInstance.channel_type_id;
         channels.push(channel);
 
         _.map(channelInstance.Bosses, (bossInstance: any) => {
@@ -450,8 +492,8 @@ function loadChannels() {
     });
 }
 
-function addBoss(msg: any, channel: Channel, time: string, location: string, bossHash: string) {
-  const hash = (bossHash) ? bossHash : _.toString(channel.getBoss().length + 1);
+function addBoss(channel: Channel, time: string, location: string, bossHash: string) {
+  const hash = (bossHash) ? bossHash : MD5(`${time}${location}`).toString();
 
   const start = Moment();
   start.hour(_.toInteger(time.substring(0, 2)));
@@ -459,17 +501,15 @@ function addBoss(msg: any, channel: Channel, time: string, location: string, bos
   start.second(0);
   start.millisecond(0);
 
-  let bossInstance = null;
   let boss: Boss = new Boss(bot, pokedex, null, channel.id, hash, start.toDate(), location);
 
-  bossRepository
+  return bossRepository
     .save(boss)
     .then((instance: BossInstance) => {
-      boss.id = instance.id;
+      boss = new Boss(bot, pokedex, instance.id, instance.channel_id, instance.hash, instance.start, instance.location);
       boss.createdAt = instance.created_at;
       boss.updatedAt = instance.updated_at;
       channel.addBoss(boss);
-      bossInstance = instance;
 
       const groups = [];
       _.map(boss.groups, (group: any) => {
@@ -483,15 +523,12 @@ function addBoss(msg: any, channel: Channel, time: string, location: string, bos
       return groups;
     })
     .then((groups: Group[]) => groupRepository.bulkCreate(groups))
-    .then(groupInstances => {
-      _.map(groupInstances, (groupInstance: any) => {
-        _.find(boss.groups, group => group.seq === groupInstance.seq).id = groupInstance.id;
+    .then((groupInstances: GroupInstance[]) => {
+      _.map(groupInstances, (groupInstance: GroupInstance) => {
+        const group = _.find(boss.groups, group => group.seq === groupInstance.seq);
+        group.id = groupInstance.id;
       });
-    })
-    .then(() => bot.sendMessage(channel.id, channel.toString(), {
-      chat_id: msg.chat.id,
-      message_id: msg.message_id
-    }));
+    });
 }
 
 function setBoss(channel: Channel, bossId: number, pokemonId: number) {
@@ -593,4 +630,21 @@ function joinBoss(msg: any, bossId: number, option: number) {
 function getAddress(lat: number, lng: number) {
   return Request(`http://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&sensor=true`)
     .then(response => response.formatted_address);
+}
+
+function syncBoss(channel: Channel, targetChannel: Channel) {
+  const promises = [];
+
+  _.map(channel.boss, (boss: Boss) => {
+    const targetBoss = targetChannel.getBossByHash(boss.hash);
+    if (!targetBoss) {
+      promises.push(addBoss(targetChannel, Moment(boss.start).format('HH:mm'), boss.location, boss.hash));
+    }
+
+    if (targetBoss && boss.pokemonId && targetBoss.pokemonId !== boss.pokemonId) {
+      promises.push(setBoss(targetChannel, targetBoss.id, boss.pokemonId));
+    }
+  });
+
+  return Promise.all(promises);
 }

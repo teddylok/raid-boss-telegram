@@ -8,6 +8,7 @@ import { defineBoss } from './entity/boss';
 import { defineChannel } from './entity/channel';
 import { defineGroup } from './entity/group';
 import { defineGroupUser } from './entity/group-user';
+import { defineSyncChannel } from './entity/sync-channel';
 
 export interface ModelsInterface {
   sequelize: Sequelize;
@@ -16,6 +17,7 @@ export interface ModelsInterface {
   Group: any;
   GroupUser: any;
   User: any;
+  SyncChannel: any;
 }
 
 const Models: ModelsInterface = {
@@ -24,7 +26,8 @@ const Models: ModelsInterface = {
   Boss: null,
   Group: null,
   GroupUser: null,
-  User: null
+  User: null,
+  SyncChannel: null
 };
 
 export const sequelize: Sequelize = new ORM(
@@ -49,6 +52,7 @@ export const Channel = defineChannel(sequelize);
 export const Group = defineGroup(sequelize);
 export const GroupUser = defineGroupUser(sequelize);
 export const User = defineUser(sequelize);
+export const SyncChannel = defineSyncChannel(sequelize);
 
 
 Models.sequelize = sequelize;
@@ -57,6 +61,7 @@ Models.Channel = Channel;
 Models.GroupUser = GroupUser;
 Models.User = User;
 Models.Group = Group;
+Models.SyncChannel = SyncChannel;
 
 _.map(_.keys(Models), (modelName) => {
   if (modelName !== 'sequelize' && Models[modelName].hasOwnProperty('associate')) {
