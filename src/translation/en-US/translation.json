@@ -30,5 +30,6 @@
   "greeting": "Hello!",
   "noneOfYourBusiness": "None of your business!",
   "channel.type.updated": "Channel type updated",
-  "date": "Date"
+  "date": "Date",
+  "sync.sentTo": "You have published to"
 }

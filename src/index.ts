@@ -264,7 +264,7 @@ bot.onText(/\/sync/, (msg) => {
           .then(() => syncBoss(channel, targetChannel))
           .then(() => syncBoss(targetChannel, channel))
           .then(() => bot.sendMessage(targetChannel.id, targetChannel.toString()))
-          .then(() => bot.sendMessage(channel.id, channel.toString()))
+          .then(() => bot.sendMessage(channel.id, `${i18n.t('sync.sentTo')} ${targetChannel.name}`))
           .catch(err => console.log(err));
       });
     });
