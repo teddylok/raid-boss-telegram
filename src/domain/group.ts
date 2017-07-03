@@ -43,7 +43,7 @@ export class Group {
     let list = `${this.getFlag()}  ${this.name} (${Emoji.get('raising_hand')}${this.users.length})\n`;
 
     _.map(this.users, (user: User) => {
-      list += `${count}. ${user.firstName}\n`;
+      list += `${count}. ${user.firstName || ''}${user.lastName || ''}\n`;
       count++;
     });
 
@@ -57,7 +57,7 @@ export class Group {
 
     _.map(users, (user: User) => {
       const username = (user.username) ? ` (@${user.username})` : '';
-      list += ` - ${count}. ${user.firstName}${username}\n`;
+      list += ` - ${count}. ${user.firstName || ''} ${user.lastName || ''}${username}\n`;
       count++;
     });
 
