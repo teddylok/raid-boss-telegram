@@ -83,6 +83,23 @@ export class Channel {
     return key;
   }
 
+  getBossList(callbackKey: string) {
+    const key = [];
+    let pos = 0;
+    let btnPerLine = 1;
+
+    _.map(_.sortBy(this.getBoss(), ['start']), (boss: Boss) => {
+      let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
+      let row = pos / btnPerLine || 0;
+      if (!key[row]) key[row] = [];
+
+      key[row].push({ text: text, callback_data: `${callbackKey}_${boss.id}` });
+      pos++;
+    });
+
+    return key;
+  }
+
   setChannelType(channelTypeId: number) {
     this.channelTypeId = channelTypeId;
   }

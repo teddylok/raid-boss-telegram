@@ -221,7 +221,7 @@ bot.onText(/\/team/, (msg) => {
   const channel = getChannel(channelId);
 
   if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) return false;
-  let keys = channel.getUpcomingBossList('TEAM');
+  let keys = channel.getBossList('TEAM');
   bot.sendMessage(channelId, i18n.t('team.pleaseSelect'), {
     reply_markup: JSON.stringify({ inline_keyboard: keys }),
     chat_id: msg.chat.id,
