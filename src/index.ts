@@ -287,7 +287,7 @@ bot.on('callback_query', (msg) => {
   const chatId = msg.message.chat.id;
   const channel = getChannel(chatId);
   const match = _.split(msg.data, '_');
-  let boss = null;
+  let boss: Boss = null;
 
   switch (match[0]) {
     case 'BOSS':

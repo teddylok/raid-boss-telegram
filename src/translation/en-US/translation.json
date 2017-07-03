@@ -27,6 +27,7 @@
   "timeslot.15min": "15 MIN",
   "timeslot.30min": "30 MIN",
   "timeslot.45min": "45 MIN",
+  "timeslot.reject": "I am not available",
   "greeting": "Hello!",
   "noneOfYourBusiness": "None of your business!",
   "channel.type.updated": "Channel type updated",
