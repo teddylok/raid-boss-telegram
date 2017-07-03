@@ -484,7 +484,7 @@ function loadChannels() {
             const group = boss.addGroup(groupInstance);
 
             _.map(groupInstance.Users, (userInstance: any) => {
-              group.users.push(userRepository.getDomainObject(userInstance));
+              group.users.push(userRepository.getDomainObject(userInstance, userInstance.GroupUser.option));
             });
           });
         });
