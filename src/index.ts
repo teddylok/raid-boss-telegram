@@ -302,6 +302,10 @@ bot.onText(/\/cp/, (msg) => {
   bot.sendPhoto(msg.chat.id, process.env.IMAGE_CP_URL);
 });
 
+bot.onText(/\/iv/, (msg) => {
+  bot.sendPhoto(msg.chat.id, process.env.IMAGE_IV_URL);
+});
+
 bot.on('callback_query', (msg) => {
   const chatId = msg.message.chat.id;
   const channel = getChannel(chatId);
