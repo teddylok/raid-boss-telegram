@@ -12,6 +12,7 @@ export class User {
   username: string;
   languageCode: string;
   teamId: number;
+  illegalClickCount: number;
   option?: number;
 
   constructor(bot: any) {

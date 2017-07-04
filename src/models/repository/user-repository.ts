@@ -2,6 +2,7 @@ import { User as UserModel } from '../models';
 import { UserInstance, UserAttribute } from '../entity/user';
 import { Team } from '../../domain/team';
 import { User } from '../../domain/user';
+import * as Bluebird from 'bluebird';
 
 export class UserRepository {
   bot: any;
@@ -50,6 +51,7 @@ export class UserRepository {
     user.username = instance.username;
     user.languageCode = instance.language_code;
     user.teamId = instance.team_id || Team.TEAM_VALOR;
+    user.illegalClickCount = instance.illegal_click_count;
     user.option = option;
 
     return user;
@@ -62,6 +64,7 @@ export class UserRepository {
       last_name: user.lastName,
       username: user.username,
       language_code: user.languageCode,
+      illegal_click_count: user.illegalClickCount,
       team_id: user.teamId
     };
 

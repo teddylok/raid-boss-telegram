@@ -13,6 +13,7 @@ export interface UserAttribute {
   username: string;
   language_code: string;
   team_id: number;
+  illegal_click_count: number;
   GroupUser?: GroupUserInstance;
 }
 
@@ -33,7 +34,8 @@ export function defineUser<UserInstance, UserAttribute>(sequelize: SequelizeInte
     last_name: { type: Sequelize.STRING(50) },
     username: { type: Sequelize.STRING(50), unique: true },
     language_code: { type: Sequelize.STRING(50) },
-    team_id: { type: Sequelize.INTEGER }
+    team_id: { type: Sequelize.INTEGER },
+    illegal_click_count: { type: Sequelize.INTEGER, defaultValue: 0 }
   }, {
     tableName: 'users',
     timestamps: true,

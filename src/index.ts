@@ -356,8 +356,17 @@ bot.on('callback_query', (msg) => {
       (_.indexOf(locales, match[1])) ? i18n.changeLanguage(match[1]) : false;
       break;
     case 'SETTEAM':
-      if (match[1] !== _.toString(msg.from.id)) {
-        bot.sendMessage(chatId, `${Emoji.get('middle_finger')} ${BotHelper.getFullName(msg.from)} ${i18n.t('noneOfYourBusiness')}`);
+      const userId = msg.from.id;
+      let user: UserInstance = null;
+      if (match[1] !== _.toString(userId)) {
+        userRepository.getById(userId)
+          .then((instance: UserInstance) => user = instance)
+          .then(() => (++user.illegal_click_count >= 10) ?
+            `${Emoji.get('middle_finger')} ${BotHelper.getFullName(msg.from)} ${Emoji.get('warning')} ${i18n.t('illegalClickWarning')}` :
+            `${Emoji.get('middle_finger')} ${BotHelper.getFullName(msg.from)} ${i18n.t('noneOfYourBusiness')}`)
+          .then((message: string) => bot.sendMessage(chatId, message))
+          .then(() => user.save())
+          .catch(err => console.log(err));
         break;
       }
       setTeam(msg.from, _.toInteger(match[2])).then(() => {
