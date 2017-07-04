@@ -50,6 +50,9 @@ export class BossRepository {
     boss.createdAt = instance.created_at;
     boss.updatedAt = instance.updated_at;
     boss.deletedAt = instance.deleted_at;
+    boss.lat = instance.lat;
+    boss.lng = instance.lng;
+    boss.gymName = instance.gym_name;
 
     if (instance.pokemon_id) {
       boss.setPokemon(_.toInteger(instance.pokemon_id));
@@ -68,7 +71,10 @@ export class BossRepository {
       channel_id: boss.channelId,
       location: boss.location,
       pokemon_id: boss.pokemonId,
-      start: boss.start
+      start: boss.start,
+      lat: boss.lat,
+      lng: boss.lng,
+      gym_name: boss.gymName
     };
 
     return model;

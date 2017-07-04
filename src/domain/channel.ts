@@ -117,19 +117,25 @@ export class Channel {
     // complete list
     list += `${Emoji.get('white_check_mark')}  ${i18n.t('list.completed')}\n`;
     _.map(completed, boss => {
-      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${boss.getEmojiName() || ''}\n`;
+      const map = (boss.lat && boss.lng) ? `*[*[${i18n.t('map')}](www.google.com.hk/maps?q=${boss.lat},${boss.lng})*]*` : '';
+      const gymName = (boss.gymName) ? `*[*${boss.gymName}*]*` : '';
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${gymName} ${map} ${boss.getEmojiName() || ''}\n`;
     });
 
     // battle list
     list += `\n${Emoji.get('crossed_swords')}  ${i18n.t('list.battle')}\n`;
     _.map(battling, boss => {
-      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${boss.getEmojiName() || ''}\n`;
+      const map = (boss.lat && boss.lng) ? `*[*[${i18n.t('map')}](www.google.com.hk/maps?q=${boss.lat},${boss.lng})*]*` : '';
+      const gymName = (boss.gymName) ? `*[*${boss.gymName}*]*` : '';
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${gymName} ${map} ${boss.getEmojiName() || ''}\n`;
     });
 
     // pending list
     list += `\n${Emoji.get('alarm_clock')}  ${i18n.t('list.pending')}\n`;
     _.map(pending, boss => {
-      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location}\n`;
+      const map = (boss.lat && boss.lng) ? `*[*[${i18n.t('map')}](www.google.com.hk/maps?q=${boss.lat},${boss.lng})*]*` : '';
+      const gymName = (boss.gymName) ? `*[*${boss.gymName}*]*` : '';
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${gymName} ${map}\n`;
     });
 
     list += `===============\n`;

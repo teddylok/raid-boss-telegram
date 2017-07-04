@@ -58,46 +58,49 @@ loadDataFromDatabase();
 
 // bot listener
 bot.on('channel_post', (msg, match) => {
-  console.log('on text msg', msg);
-  if (_.toString(msg.chat.id) === _.toString(process.env.TAI_PO_RAID_ALERT_CHAT_ID)) {
+  const channelId = msg.chat.id;
+
+  if (_.toString(channelId) === _.toString(process.env.TAI_PO_RAID_ALERT_CHAT_ID)) {
     try {
-      const channel = getChannel(msg.chat.id);
       const data = JSON.parse(base64.decode(msg.text));
       const hash = data[0];
       const gymName = data[1];
-      const lat = _.toInteger(data[2]);
-      const lng = _.toInteger(data[3]);
+      const lat = _.toNumber(data[2]);
+      const lng = _.toNumber(data[3]);
       const level = _.toInteger(data[5]);
       const pokemonId = _.toInteger(data[6]);
       let boss = null;
 
       if (4 === level) {
-        getAddress(lat, lng)
-          .then(address => {
-            address = _.replace(address, /香港|九龍|新界|大埔/g, 'qu');
-            bot.sendMessage(channel.id, `${hash} ${gymName} ${lat} ${level} ${pokemonId} ${address}`);
+        syncChannelRepository
+          .getByChannelId(channelId)
+          .then((syncChannels: SyncChannelInstance[]) => {
+            _.map(syncChannels, (syncChannel: SyncChannelInstance) => {
+              const targetChannel = getChannel(syncChannel.target_channel_id);
 
-            boss = channel.getBossByHash(hash);
-            if (!boss) {
-              return addBoss(channel, Moment(data[4]).format('HH:mm'), `${address} ${gymName}`, hash)
-                .then(() => bot.sendMessage(channel.id, channel.toString(), {
-                  chat_id: msg.chat.id,
-                  message_id: msg.message_id
-                }));
-            }
-          })
-          .then(() => {
-            console.log(channel.boss);
-            boss = channel.getBossByHash(hash);
-            if (pokemonId) {
-              return setBoss(channel, boss.id, pokemonId)
+              getAddress(lat, lng)
+                .then(address => {
+                  address = _.replace(address, /香港|九龍|新界|大埔/g, '');
+                  console.log(targetChannel.id, `${hash} ${gymName} ${lat} ${level} ${pokemonId} ${address}`);
+
+                  boss = targetChannel.getBossByHash(hash);
+                  if (!boss) {
+                    return addBoss(targetChannel, Moment(data[4]).format('HH:mm'), `${address}`, hash, gymName, lat, lng);
+                  }
+                })
                 .then(() => {
-                  bot.sendMessage(channel.id, channel.toString(), {
-                    chat_id: msg.chat.id,
-                    message_id: msg.message_id
-                  });
-                });
-            }
+                  boss = targetChannel.getBossByHash(hash);
+                  if (pokemonId) {
+                    return setBoss(targetChannel, boss.id, pokemonId);
+                  }
+                })
+                .then(() => bot.sendMessage(targetChannel.id, targetChannel.toString(), {
+                  chat_id: msg.chat.id,
+                  message_id: msg.message_id,
+                  parse_mode: 'Markdown'
+                }))
+                .catch(err => console.log(err));
+            });
           })
           .catch(err => console.log(err));
       }
@@ -169,7 +172,8 @@ bot.onText(/\/raid (\d\d:\d\d) (.+)/, (msg, match) => {
   addBoss(channel, time, location, null)
     .then(() => bot.sendMessage(channel.id, channel.toString(), {
       chat_id: msg.chat.id,
-      message_id: msg.message_id
+      message_id: msg.message_id,
+      parse_mode: 'Markdown'
     }));
 });
 
@@ -177,7 +181,8 @@ bot.onText(/\/list(.+)?/, (msg, match) => {
   const channel = getChannel(msg.chat.id);
   bot.sendMessage(channel.id, channel.toString(_.trim(match[1])), {
     chat_id: msg.chat.id,
-    message_id: msg.message_id
+    message_id: msg.message_id,
+    parse_mode: 'Markdown'
   });
 });
 
@@ -200,7 +205,8 @@ bot.onText(/\/boss/, (msg) => {
   bot.sendMessage(channelId, i18n.t('boss.pleaseSelect'), {
     reply_markup: JSON.stringify({ inline_keyboard: BotHelper.getInlineKeyboard(keys, 2) }),
     chat_id: msg.chat.id,
-    message_id: msg.message_id
+    message_id: msg.message_id,
+    parse_mode: 'Markdown'
   });
 });
 
@@ -212,7 +218,8 @@ bot.onText(/\/join/, (msg) => {
   bot.sendMessage(channelId, (keys) ? i18n.t('join.pleaseSelect') : i18n.t('battle.currentlyNoBattle'), {
     reply_markup: JSON.stringify({ inline_keyboard: keys }),
     chat_id: msg.chat.id,
-    message_id: msg.message_id
+    message_id: msg.message_id,
+    parse_mode: 'Markdown'
   });
 });
 
@@ -225,7 +232,8 @@ bot.onText(/\/team/, (msg) => {
   bot.sendMessage(channelId, i18n.t('team.pleaseSelect'), {
     reply_markup: JSON.stringify({ inline_keyboard: keys }),
     chat_id: msg.chat.id,
-    message_id: msg.message_id
+    message_id: msg.message_id,
+    parse_mode: 'Markdown'
   });
 });
 
@@ -240,13 +248,17 @@ bot.onText(/\/delboss/, (msg, match) => {
   }
 
   _.map(_.sortBy(channel.getBoss(), ['start']), (boss: Boss) => {
-    keys.push({ text: `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`, callbackData: `DELBOSS_${boss.id}` });
+    keys.push({
+      text: `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`,
+      callbackData: `DELBOSS_${boss.id}`
+    });
   });
 
   bot.sendMessage(msg.chat.id, i18n.t('team.pleaseSelect'), {
     reply_markup: JSON.stringify({ inline_keyboard: BotHelper.getInlineKeyboard(keys, 2) }),
     chat_id: msg.chat.id,
-    message_id: msg.message_id
+    message_id: msg.message_id,
+    parse_mode: 'Markdown'
   });
 });
 
@@ -263,7 +275,9 @@ bot.onText(/\/sync/, (msg) => {
         Promise.resolve()
           .then(() => syncBoss(channel, targetChannel))
           .then(() => syncBoss(targetChannel, channel))
-          .then(() => bot.sendMessage(targetChannel.id, targetChannel.toString()))
+          .then(() => bot.sendMessage(targetChannel.id, targetChannel.toString(), {
+            parse_mode: 'Markdown'
+          }))
           .then(() => bot.sendMessage(channel.id, `${i18n.t('sync.sentTo')} ${targetChannel.name}`))
           .catch(err => console.log(err));
       });
@@ -308,14 +322,16 @@ bot.on('callback_query', (msg) => {
       bot.editMessageText(message, {
         reply_markup: JSON.stringify({ inline_keyboard: BotHelper.getInlineKeyboard(keys, 3) }),
         chat_id: chatId,
-        message_id: msg.message.message_id
+        message_id: msg.message.message_id,
+        parse_mode: 'Markdown'
       });
       break;
     case 'TEAM':
       boss = channel.getBossById(_.toInteger(match[1]));
       bot.editMessageText(boss.toString(), {
         chat_id: chatId,
-        message_id: msg.message.message_id
+        message_id: msg.message.message_id,
+        parse_mode: 'Markdown'
       });
       break;
     case 'SETBOSS':
@@ -323,7 +339,8 @@ bot.on('callback_query', (msg) => {
         .then(() => {
           bot.editMessageText(channel.toString(), {
             chat_id: chatId,
-            message_id: msg.message.message_id
+            message_id: msg.message.message_id,
+            parse_mode: 'Markdown'
           });
         });
       break;
@@ -334,7 +351,8 @@ bot.on('callback_query', (msg) => {
       bot.editMessageText(`${boss.toString()}\n\n`, {
         reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
         chat_id: chatId,
-        message_id: msg.message.message_id
+        message_id: msg.message.message_id,
+        parse_mode: 'Markdown'
       });
       break;
     case 'JOINBOSS':
@@ -347,9 +365,9 @@ bot.on('callback_query', (msg) => {
         .then(() => getChannel(channel.id).removeBoss(id))
         .then(() => bot.editMessageText(channel.toString(), {
           chat_id: chatId,
-          message_id: msg.message.message_id
+          message_id: msg.message.message_id,
+          parse_mode: 'Markdown'
         }))
-        // .then(() => bot.sendMessage(channel.id, `${Emoji.get('skull_and_crossbones')}  ${i18n.t('boss.deleted', { id })}`))
         .catch(err => console.log(err));
       break;
     case 'LOCALE':
@@ -385,7 +403,8 @@ bot.on('callback_query', (msg) => {
         }
         bot.editMessageText(i18n.t('team.changed', { name: msg.from.first_name, teamName }), {
           chat_id: chatId,
-          message_id: msg.message.message_id
+          message_id: msg.message.message_id,
+          parse_mode: 'Markdown'
         });
       }).catch(err => console.log(err));
       break;
@@ -426,7 +445,8 @@ bot.on('message', (msg) => {
 //   bot.sendMessage(channel.id, message, {
 //     reply_markup: JSON.stringify({ inline_keyboard: key }),
 //     chat_id: msg.chat.id,
-//     message_id: msg.message_id
+//     message_id: msg.message_id,
+//     parse_mode: 'Markdown'
 //   });
 // });
 
@@ -501,7 +521,7 @@ function loadChannels() {
     });
 }
 
-function addBoss(channel: Channel, time: string, location: string, bossHash: string) {
+function addBoss(channel: Channel, time: string, location: string, bossHash: string, gymName?: string, lat?: number, lng?: number) {
   const hash = (bossHash) ? bossHash : MD5(`${time}${location}`).toString();
 
   const start = Moment();
@@ -512,12 +532,14 @@ function addBoss(channel: Channel, time: string, location: string, bossHash: str
 
   let boss: Boss = new Boss(bot, pokedex, null, channel.id, hash, start.toDate(), location);
 
+  if (gymName) boss.gymName = gymName;
+  if (lat) boss.lat = lat;
+  if (lng) boss.lng = lng;
+
   return bossRepository
     .save(boss)
     .then((instance: BossInstance) => {
-      boss = new Boss(bot, pokedex, instance.id, instance.channel_id, instance.hash, instance.start, instance.location);
-      boss.createdAt = instance.created_at;
-      boss.updatedAt = instance.updated_at;
+      boss = bossRepository.getDomainObject(instance);
       channel.addBoss(boss);
 
       const groups = [];
@@ -588,7 +610,8 @@ function chooseTeam(msg) {
   bot.sendMessage(channel.id, message, {
     reply_markup: JSON.stringify({ inline_keyboard: key }),
     chat_id: msg.chat.id,
-    message_id: msg.message_id
+    message_id: msg.message_id,
+    parse_mode: 'Markdown'
   });
 }
 
@@ -632,13 +655,14 @@ function joinBoss(msg: any, bossId: number, option: number) {
       chat_id: channel.id,
       message_id: msg.message.message_id,
       reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
+      parse_mode: 'Markdown'
     }))
     .catch(err => console.log(err));
 }
 
 function getAddress(lat: number, lng: number) {
-  return Request(`http://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&sensor=true`)
-    .then(response => response.formatted_address);
+  return Request(`http://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&sensor=true&region=cn&language=zh-TW`)
+    .then(response => JSON.parse(response).results[0].formatted_address);
 }
 
 function syncBoss(channel: Channel, targetChannel: Channel) {

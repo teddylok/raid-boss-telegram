@@ -18,6 +18,9 @@ export class Boss {
   bot: any;
   channelId: string;
   location: string;
+  lat: number;
+  lng: number;
+  gymName: string;
   name: string;
   pokemonId: number;
   pokedex: Pokedex;
@@ -67,6 +70,11 @@ export class Boss {
     _.map(this.groups, group => {
       group.users = _.filter(group.users, user => user.id !== userId);
     });
+  }
+
+  setCoordinate(lat: number, lng: number) {
+    this.lat = lat;
+    this.lng = lng;
   }
 
   getGroupIds() {

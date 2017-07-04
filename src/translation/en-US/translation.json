@@ -33,5 +33,6 @@
   "channel.type.updated": "Channel type updated",
   "date": "Date",
   "sync.sentTo": "You have published to",
-  "illegalClickWarning": "Hey! Stop doing this, otherwise we will kick you out"
+  "illegalClickWarning": "Hey! Stop doing this, otherwise we will kick you out",
+  "map": "MAP"
 }

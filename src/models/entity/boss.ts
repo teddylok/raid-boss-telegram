@@ -10,7 +10,10 @@ export interface BossAttribute {
   deleted_at?: Date;
   channel_id: string;
   hash: string;
+  lat: number;
+  lng: number;
   location: string;
+  gym_name: string;
   pokemon_id: number;
   start: Date;
 }
@@ -31,7 +34,10 @@ export function defineBoss<BossInstance, BossAttribute>(sequelize: SequelizeInte
     deleted_at: { type: Sequelize.DATE },
     channel_id: { type: Sequelize.BIGINT },
     hash: { type: Sequelize.STRING(255) },
+    lat: { type: Sequelize.FLOAT },
+    lng: { type: Sequelize.FLOAT },
     location: { type: Sequelize.STRING(255) },
+    gym_name: { type: Sequelize.STRING(255) },
     pokemon_id: { type: Sequelize.INTEGER },
     start: { type: Sequelize.DATE }
   }, {
