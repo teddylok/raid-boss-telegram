@@ -81,19 +81,20 @@ bot.on('channel_post', (msg, match) => {
               getAddress(lat, lng)
                 .then(address => {
                   address = _.replace(address, /香港|九龍|新界|大埔/g, '');
-                  console.log(targetChannel.id, `${hash} ${gymName} ${lat} ${level} ${pokemonId} ${address}`);
 
                   boss = targetChannel.getBossByHash(hash);
                   if (!boss) {
-                    return addBoss(targetChannel, Moment(data[4]).format('HH:mm'), `${address}`, hash, gymName, lat, lng);
-                  }
-                })
-                .then(() => {
-                  boss = targetChannel.getBossByHash(hash);
-                  if (pokemonId) {
+                    return addBoss(targetChannel, Moment(data[4]).format('HH:mm'), `${address}`, hash, gymName, lat, lng, pokemonId);
+                  } else {
                     return setBoss(targetChannel, boss.id, pokemonId);
                   }
                 })
+                // .then(() => {
+                  // boss = targetChannel.getBossByHash(hash);
+                  // if (pokemonId) {
+                  //   return setBoss(targetChannel, boss.id, pokemonId);
+                  // }
+                // })
                 .then(() => bot.sendMessage(targetChannel.id, targetChannel.toString(), {
                   chat_id: msg.chat.id,
                   message_id: msg.message_id,
@@ -521,7 +522,7 @@ function loadChannels() {
     });
 }
 
-function addBoss(channel: Channel, time: string, location: string, bossHash: string, gymName?: string, lat?: number, lng?: number) {
+function addBoss(channel: Channel, time: string, location: string, bossHash: string, gymName?: string, lat?: number, lng?: number, pokemonId?: number) {
   const hash = (bossHash) ? bossHash : MD5(`${time}${location}`).toString();
 
   const start = Moment();
@@ -535,6 +536,7 @@ function addBoss(channel: Channel, time: string, location: string, bossHash: str
   if (gymName) boss.gymName = gymName;
   if (lat) boss.lat = lat;
   if (lng) boss.lng = lng;
+  if (pokemonId) boss.pokemonId = pokemonId;
 
   return bossRepository
     .save(boss)
@@ -671,10 +673,8 @@ function syncBoss(channel: Channel, targetChannel: Channel) {
   _.map(channel.boss, (boss: Boss) => {
     const targetBoss = targetChannel.getBossByHash(boss.hash);
     if (!targetBoss) {
-      promises.push(addBoss(targetChannel, Moment(boss.start).format('HH:mm'), boss.location, boss.hash));
-    }
-
-    if (targetBoss && boss.pokemonId && targetBoss.pokemonId !== boss.pokemonId) {
+      promises.push(addBoss(targetChannel, Moment(boss.start).format('HH:mm'), boss.location, boss.hash, boss.gymName, boss.lat, boss.lng, boss.pokemonId));
+    } else {
       promises.push(setBoss(targetChannel, targetBoss.id, boss.pokemonId));
     }
   });
