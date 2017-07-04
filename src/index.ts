@@ -298,6 +298,10 @@ bot.onText(/\/setchanneltype (\d)/, (msg, match) => {
     .catch(err => console.log(err));
 });
 
+bot.onText(/\/cp/, (msg) => {
+  bot.sendPhoto(msg.chat.id, process.env.IMAGE_CP_URL);
+});
+
 bot.on('callback_query', (msg) => {
   const chatId = msg.message.chat.id;
   const channel = getChannel(chatId);
