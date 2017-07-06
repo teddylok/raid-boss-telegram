@@ -193,12 +193,14 @@ bot.onText(/\/boss/, (msg) => {
   const keys = [];
 
   if (channel.channelTypeId !== Channel.CHANNEL_TYPE_ADMIN) return false;
-  if (!channel.getBattleAndCompletedBoss()) {
+  const bosses = channel.getBattleAndCompletedBoss();
+
+  if (!bosses) {
     bot.sendMessage(channelId, i18n.t('battle.currentlyNoBattle'));
     return;
   }
 
-  _.map(channel.getBattleAndCompletedBoss(), (boss: Boss) => {
+  _.map(bosses, (boss: Boss) => {
     let text = `${Moment(boss.start).format('HH:mm')} ${boss.location} ${boss.getEmojiName()}`;
     keys.push({ text: text, callbackData: `BOSS_${boss.id}` });
   });
@@ -319,7 +321,7 @@ bot.on('callback_query', (msg) => {
       const keys = [];
 
       _.map(level4Pokemons, (pokemon: Pokemon) => {
-        keys.push({ text: pokemon.zhHkName, callbackData: `SETBOSS_${boss.id}_${pokemon.id}` });
+        keys.push({ text: `${pokemon.id}. ${pokemon.zhHkName}`, callbackData: `SETBOSS_${boss.id}_${pokemon.id}` });
       });
 
       const message = i18n.t('boss.whatIsTheBoss', {
