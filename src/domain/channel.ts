@@ -42,6 +42,14 @@ export class Channel {
     return _.find(this.boss, boss => boss.hash === hash );
   }
 
+  getBossIds() {
+    return _.map(this.boss, 'id');
+  }
+
+  getBossHashes() {
+    return _.map(this.boss, 'hash');
+  }
+
   getBoss() {
     return _.filter(this.boss, (boss: Boss) => Moment(boss.start).format('YYYY-MM-DD') === Moment().format('YYYY-MM-DD'));
   }

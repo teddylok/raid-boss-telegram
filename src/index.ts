@@ -275,7 +275,7 @@ bot.onText(/\/sync/, (msg) => {
 
         Promise.resolve()
           .then(() => syncBoss(channel, targetChannel))
-          .then(() => syncBoss(targetChannel, channel))
+          // .then(() => syncBoss(targetChannel, channel))
           .then(() => bot.sendMessage(targetChannel.id, targetChannel.toString(), {
             parse_mode: 'Markdown'
           }))
@@ -369,9 +369,7 @@ bot.on('callback_query', (msg) => {
       break;
     case 'DELBOSS':
       const id = _.toInteger(match[1]);
-      bossRepository
-        .remove(id)
-        .then(() => getChannel(channel.id).removeBoss(id))
+      delBoss(getChannel(channel.id), id)
         .then(() => bot.editMessageText(channel.toString(), {
           chat_id: chatId,
           message_id: msg.message.message_id,
@@ -580,6 +578,37 @@ function setBoss(channel: Channel, bossId: number, pokemonId: number) {
     .catch(err => console.log(err));
 }
 
+function delBoss(channel: Channel, bossId: number) {
+  return bossRepository
+    .remove(bossId)
+    .then(() => channel.removeBoss(bossId));
+}
+
+function joinBoss(msg: any, bossId: number, option: number) {
+  const channel = getChannel(msg.message.chat.id);
+  const boss = channel.getBossById(bossId);
+
+  let group = null;
+  let userInstance = null;
+
+  Promise.resolve()
+    .then(() => userRepository.save(getUser(msg.from)))
+    .then((instance: UserInstance) => userInstance = instance)
+    .then(() => group = _.find(boss.groups, (group: Group) => group.seq === userInstance.team_id))
+    .then(() => groupRepository.removeGroupUser(boss.getGroupIds(), userInstance.id))
+    .then(() => boss.removeUserInGroup(userInstance.id))
+    .then(() => groupRepository.getById(group.id))
+    .then((instance: GroupInstance) => instance.addUser(userInstance, { option }))
+    .then(() => group.addUser(userRepository.getDomainObject(userInstance, option)))
+    .then(() => bot.editMessageText(`${boss.toString()} ${i18n.t('lastUpdated')}: ${Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour').format('HH:mm:ss')}`, {
+      chat_id: channel.id,
+      message_id: msg.message.message_id,
+      reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
+      parse_mode: 'Markdown'
+    }))
+    .catch(err => console.log(err));
+}
+
 function getTranslations() {
   const namespaces = ['translation'];
   const resources = {};
@@ -645,31 +674,6 @@ function getUser(from, option?: string) {
   return user;
 }
 
-function joinBoss(msg: any, bossId: number, option: number) {
-  const channel = getChannel(msg.message.chat.id);
-  const boss = channel.getBossById(bossId);
-
-  let group = null;
-  let userInstance = null;
-
-  Promise.resolve()
-    .then(() => userRepository.save(getUser(msg.from)))
-    .then((instance: UserInstance) => userInstance = instance)
-    .then(() => group = _.find(boss.groups, (group: Group) => group.seq === userInstance.team_id))
-    .then(() => groupRepository.removeGroupUser(boss.getGroupIds(), userInstance.id))
-    .then(() => boss.removeUserInGroup(userInstance.id))
-    .then(() => groupRepository.getById(group.id))
-    .then((instance: GroupInstance) => instance.addUser(userInstance, { option }))
-    .then(() => group.addUser(userRepository.getDomainObject(userInstance, option)))
-    .then(() => bot.editMessageText(`${boss.toString()} ${i18n.t('lastUpdated')}: ${Moment().add(process.env.TIMEZONE_OFFSET || 0, 'hour').format('HH:mm:ss')}`, {
-      chat_id: channel.id,
-      message_id: msg.message.message_id,
-      reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
-      parse_mode: 'Markdown'
-    }))
-    .catch(err => console.log(err));
-}
-
 function getAddress(lat: number, lng: number) {
   return Request(`http://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&sensor=true&region=cn&language=zh-TW`)
     .then(response => JSON.parse(response).results[0].formatted_address);
@@ -682,9 +686,16 @@ function syncBoss(channel: Channel, targetChannel: Channel) {
     const targetBoss = targetChannel.getBossByHash(boss.hash);
     if (!targetBoss) {
       promises.push(addBoss(targetChannel, Moment(boss.start).format('HH:mm'), boss.location, boss.hash, boss.gymName, boss.lat, boss.lng, boss.pokemonId));
-    } else {
+    } else if (boss.pokemonId) {
       promises.push(setBoss(targetChannel, targetBoss.id, boss.pokemonId));
     }
+  });
+
+  const bossToDeleteHashes = _.difference(targetChannel.getBossHashes(), channel.getBossHashes());
+
+  _.map(bossToDeleteHashes, (hash: string) => {
+    let boss = targetChannel.getBossByHash(hash);
+    promises.push(delBoss(targetChannel, boss.id));
   });
 
   return Promise.all(promises);
