@@ -125,13 +125,13 @@ export class Channel {
     // complete list
     list += `${Emoji.get('white_check_mark')}  ${i18n.t('list.completed')}\n`;
     _.map(completed, boss => {
-      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${this.getMapLink(boss)} ${boss.getEmojiName() || ''}\n`;
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${boss.getEmojiName() || ''} ${this.getMapLink(boss)}\n`;
     });
 
     // battle list
     list += `\n${Emoji.get('crossed_swords')}  ${i18n.t('list.battle')}\n`;
     _.map(battling, boss => {
-      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${this.getMapLink(boss)} ${boss.getEmojiName() || ''}\n`;
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${boss.getEmojiName() || ''} ${this.getMapLink(boss)}\n`;
     });
 
     // pending list
