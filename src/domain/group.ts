@@ -53,7 +53,7 @@ export class Group {
   toTimeSlotString(timeSlot: number) {
     let count = 1;
     let users = _.filter(this.users, u => u.option === timeSlot);
-    let list = `${this.getFlag()}  ${this.name} (${users.length})\n`;
+    let list = `${this.getFlag()}  *${this.name}* (${users.length})\n`;
 
     _.map(users, (user: User) => {
       const username = (user.username) ? ` (@${user.username})` : '';

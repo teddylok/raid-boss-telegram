@@ -98,11 +98,11 @@ export class Boss {
   }
 
   toString() {
-    let list = `${Moment(this.start).format('HH:mm')} ${this.location} ${this.getEmojiName()}\n\n`;
+    let list = `*${Moment(this.start).format('HH:mm')} ${this.location} ${this.getEmojiName()}*\n\n`;
 
     const timeSlots = new TimeSlots().getTimeSlots();
     _.map(timeSlots, timeSlot => {
-      list += `${timeSlot.emoji} ${timeSlot.text}\n`;
+      list += `${timeSlot.emoji} *${timeSlot.text}*\n`;
       _.map(this.groups, (group: Group) => {
         list += `${group.toTimeSlotString(timeSlot.id)}\n`;
       });
