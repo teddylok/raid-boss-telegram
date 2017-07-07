@@ -98,7 +98,7 @@ bot.on('channel_post', (msg, match) => {
                 .then(() => bot.sendMessage(targetChannel.id, targetChannel.toString(), {
                   chat_id: msg.chat.id,
                   message_id: msg.message_id,
-                  parse_mode: 'Markdown'
+                  parse_mode: 'Html'
                 }))
                 .catch(err => console.log(err));
             });
@@ -174,7 +174,7 @@ bot.onText(/\/raid (\d\d:\d\d) (.+)/, (msg, match) => {
     .then(() => bot.sendMessage(channel.id, channel.toString(), {
       chat_id: msg.chat.id,
       message_id: msg.message_id,
-      parse_mode: 'Markdown'
+      parse_mode: 'Html'
     }));
 });
 
@@ -183,7 +183,7 @@ bot.onText(/\/list(.+)?/, (msg, match) => {
   bot.sendMessage(channel.id, channel.toString(_.trim(match[1])), {
     chat_id: msg.chat.id,
     message_id: msg.message_id,
-    parse_mode: 'Markdown'
+    parse_mode: 'Html'
   });
 });
 
@@ -209,7 +209,7 @@ bot.onText(/\/boss/, (msg) => {
     reply_markup: JSON.stringify({ inline_keyboard: BotHelper.getInlineKeyboard(keys, 2) }),
     chat_id: msg.chat.id,
     message_id: msg.message_id,
-    parse_mode: 'Markdown'
+    parse_mode: 'Html'
   });
 });
 
@@ -222,7 +222,7 @@ bot.onText(/\/join/, (msg) => {
     reply_markup: JSON.stringify({ inline_keyboard: keys }),
     chat_id: msg.chat.id,
     message_id: msg.message_id,
-    parse_mode: 'Markdown'
+    parse_mode: 'Html'
   });
 });
 
@@ -236,7 +236,7 @@ bot.onText(/\/team/, (msg) => {
     reply_markup: JSON.stringify({ inline_keyboard: keys }),
     chat_id: msg.chat.id,
     message_id: msg.message_id,
-    parse_mode: 'Markdown'
+    parse_mode: 'Html'
   });
 });
 
@@ -261,7 +261,7 @@ bot.onText(/\/delboss/, (msg, match) => {
     reply_markup: JSON.stringify({ inline_keyboard: BotHelper.getInlineKeyboard(keys, 2) }),
     chat_id: msg.chat.id,
     message_id: msg.message_id,
-    parse_mode: 'Markdown'
+    parse_mode: 'Html'
   });
 });
 
@@ -279,7 +279,7 @@ bot.onText(/\/sync/, (msg) => {
           .then(() => syncBoss(channel, targetChannel))
           // .then(() => syncBoss(targetChannel, channel))
           .then(() => bot.sendMessage(targetChannel.id, targetChannel.toString(), {
-            parse_mode: 'Markdown'
+            parse_mode: 'Html'
           }))
           .then(() => bot.sendMessage(channel.id, `${i18n.t('sync.sentTo')} ${targetChannel.name}`))
           .catch(err => console.log(err));
@@ -334,7 +334,7 @@ bot.on('callback_query', (msg) => {
         reply_markup: JSON.stringify({ inline_keyboard: BotHelper.getInlineKeyboard(keys, 3) }),
         chat_id: chatId,
         message_id: msg.message.message_id,
-        parse_mode: 'Markdown'
+        parse_mode: 'Html'
       });
       break;
     case 'TEAM':
@@ -342,7 +342,7 @@ bot.on('callback_query', (msg) => {
       bot.editMessageText(boss.toString(), {
         chat_id: chatId,
         message_id: msg.message.message_id,
-        parse_mode: 'Markdown'
+        parse_mode: 'Html'
       });
       break;
     case 'SETBOSS':
@@ -351,7 +351,7 @@ bot.on('callback_query', (msg) => {
           bot.editMessageText(channel.toString(), {
             chat_id: chatId,
             message_id: msg.message.message_id,
-            parse_mode: 'Markdown'
+            parse_mode: 'Html'
           });
         });
       break;
@@ -363,7 +363,7 @@ bot.on('callback_query', (msg) => {
         reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
         chat_id: chatId,
         message_id: msg.message.message_id,
-        parse_mode: 'Markdown'
+        parse_mode: 'Html'
       });
       break;
     case 'JOINBOSS':
@@ -375,7 +375,7 @@ bot.on('callback_query', (msg) => {
         .then(() => bot.editMessageText(channel.toString(), {
           chat_id: chatId,
           message_id: msg.message.message_id,
-          parse_mode: 'Markdown'
+          parse_mode: 'Html'
         }))
         .catch(err => console.log(err));
       break;
@@ -413,7 +413,7 @@ bot.on('callback_query', (msg) => {
         bot.editMessageText(i18n.t('team.changed', { name: msg.from.first_name, teamName }), {
           chat_id: chatId,
           message_id: msg.message.message_id,
-          parse_mode: 'Markdown'
+          parse_mode: 'Html'
         });
       }).catch(err => console.log(err));
       break;
@@ -455,7 +455,7 @@ bot.on('message', (msg) => {
 //     reply_markup: JSON.stringify({ inline_keyboard: key }),
 //     chat_id: msg.chat.id,
 //     message_id: msg.message_id,
-//     parse_mode: 'Markdown'
+//     parse_mode: 'Html'
 //   });
 // });
 
@@ -606,7 +606,7 @@ function joinBoss(msg: any, bossId: number, option: number) {
       chat_id: channel.id,
       message_id: msg.message.message_id,
       reply_markup: JSON.stringify({ inline_keyboard: boss.getTimeSlotList('JOINBOSS') }),
-      parse_mode: 'Markdown'
+      parse_mode: 'Html'
     }))
     .catch(err => console.log(err));
 }
@@ -652,7 +652,7 @@ function chooseTeam(msg) {
     reply_markup: JSON.stringify({ inline_keyboard: key }),
     chat_id: msg.chat.id,
     message_id: msg.message_id,
-    parse_mode: 'Markdown'
+    parse_mode: 'Html'
   });
 }
 

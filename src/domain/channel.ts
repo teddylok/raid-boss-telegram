@@ -125,30 +125,28 @@ export class Channel {
     // complete list
     list += `${Emoji.get('white_check_mark')}  ${i18n.t('list.completed')}\n`;
     _.map(completed, boss => {
-      const map = (boss.lat && boss.lng) ? `*[*[${i18n.t('map')}](www.google.com.hk/maps?q=${boss.lat},${boss.lng})*]*` : '';
-      const gymName = (boss.gymName) ? `*[*${boss.gymName}*]*` : '';
-      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${gymName} ${map} ${boss.getEmojiName() || ''}\n`;
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${this.getMapLink(boss)} ${boss.getEmojiName() || ''}\n`;
     });
 
     // battle list
     list += `\n${Emoji.get('crossed_swords')}  ${i18n.t('list.battle')}\n`;
     _.map(battling, boss => {
-      const map = (boss.lat && boss.lng) ? `*[*[${i18n.t('map')}](www.google.com.hk/maps?q=${boss.lat},${boss.lng})*]*` : '';
-      const gymName = (boss.gymName) ? `*[*${boss.gymName}*]*` : '';
-      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${gymName} ${map} ${boss.getEmojiName() || ''}\n`;
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${this.getMapLink(boss)} ${boss.getEmojiName() || ''}\n`;
     });
 
     // pending list
     list += `\n${Emoji.get('alarm_clock')}  ${i18n.t('list.pending')}\n`;
     _.map(pending, boss => {
-      const map = (boss.lat && boss.lng) ? `*[*[${i18n.t('map')}](www.google.com.hk/maps?q=${boss.lat},${boss.lng})*]*` : '';
-      const gymName = (boss.gymName) ? `*[*${boss.gymName}*]*` : '';
-      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${gymName} ${map}\n`;
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${this.getMapLink(boss)}\n`;
     });
 
     list += `===============\n`;
     list += `${i18n.t('lastUpdated')}: ${Moment().format('HH:mm:ss')} \n`;
 
     return list;
+  }
+
+  private getMapLink(boss) {
+    return (boss.lat && boss.lng) ? `<a href="www.google.com.hk/maps?q=${boss.lat},${boss.lng}">${(boss.gymName) ? boss.gymName : i18n.t('map')}]</a>` : '';
   }
 }
