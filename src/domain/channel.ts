@@ -147,6 +147,6 @@ export class Channel {
   }
 
   private getMapLink(boss) {
-    return (boss.lat && boss.lng) ? `<a href="www.google.com.hk/maps?q=${boss.lat},${boss.lng}">${(boss.gymName) ? boss.gymName : i18n.t('map')}]</a>` : '';
+    return (boss.lat && boss.lng) ? `[<a href="www.google.com.hk/maps?q=${boss.lat},${boss.lng}">${(boss.gymName) ? boss.gymName : i18n.t('map')}</a>]` : '';
   }
 }
