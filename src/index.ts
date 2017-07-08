@@ -80,7 +80,7 @@ bot.on('channel_post', (msg, match) => {
 
               getAddress(lat, lng)
                 .then(address => {
-                  address = _.replace(address, /香港|九龍|新界|大埔/g, '');
+                  address = _.replace(address, /香港|九龍|新界/g, '');
 
                   boss = targetChannel.getBossByHash(hash);
                   if (!boss) {
