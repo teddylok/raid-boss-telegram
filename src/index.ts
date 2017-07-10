@@ -308,6 +308,42 @@ bot.onText(/\/iv/, (msg) => {
   bot.sendPhoto(msg.chat.id, process.env.IMAGE_IV_URL);
 });
 
+bot.onText(/\/header (.+)/, (msg, match) => {
+  const channel = getChannel(msg.chat.id);
+  channel.header = match[1];
+  channelRepository
+    .save(channel)
+    .then(() => bot.sendMessage(channel.id, i18n.t('header.updated')))
+    .catch(err => console.log(err));
+});
+
+bot.onText(/\/footer (.+)/, (msg, match) => {
+  const channel = getChannel(msg.chat.id);
+  channel.footer = match[1];
+  channelRepository
+    .save(channel)
+    .then(() => bot.sendMessage(channel.id, i18n.t('footer.updated')))
+    .catch(err => console.log(err));
+});
+
+bot.onText(/\/delheader/, (msg) => {
+  const channel = getChannel(msg.chat.id);
+  channel.header = '';
+  channelRepository
+    .save(channel)
+    .then(() => bot.sendMessage(channel.id, i18n.t('header.updated')))
+    .catch(err => console.log(err));
+});
+
+bot.onText(/\/delfooter/, (msg) => {
+  const channel = getChannel(msg.chat.id);
+  channel.footer = '';
+  channelRepository
+    .save(channel)
+    .then(() => bot.sendMessage(channel.id, i18n.t('footer.updated')))
+    .catch(err => console.log(err));
+});
+
 bot.on('callback_query', (msg) => {
   const chatId = msg.message.chat.id;
   const channel = getChannel(chatId);
@@ -506,22 +542,19 @@ function loadChannels() {
         }
       ]
     })
-    .then(channelInstances => {
-      _.map(channelInstances, (channelInstance: any) => {
-        const channel = new Channel(bot, channelInstance.id, channelInstance.name);
-        channel.createdAt = channelInstance.created_at;
-        channel.updatedAt = channelInstance.updated_at;
-        channel.channelTypeId = channelInstance.channel_type_id;
+    .then((channelInstances: ChannelInstance[]) => {
+      _.map(channelInstances, (channelInstance: ChannelInstance) => {
+        const channel = channelRepository.getDomainObject(channelInstance);
         channels.push(channel);
 
-        _.map(channelInstance.Bosses, (bossInstance: any) => {
+        _.map(channelInstance.Bosses, (bossInstance: BossInstance) => {
           const boss = bossRepository.getDomainObject(bossInstance);
           channel.addBoss(boss);
 
-          _.map(bossInstance.Groups, (groupInstance: any) => {
+          _.map(bossInstance.Groups, (groupInstance: GroupInstance) => {
             const group = boss.addGroup(groupInstance);
 
-            _.map(groupInstance.Users, (userInstance: any) => {
+            _.map(groupInstance.Users, (userInstance: UserInstance) => {
               group.users.push(userRepository.getDomainObject(userInstance, userInstance.GroupUser.option));
             });
           });

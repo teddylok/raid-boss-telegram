@@ -19,6 +19,7 @@ export interface BossAttribute {
 }
 
 export interface BossInstance extends Sequelize.Instance<BossAttribute>, BossAttribute {
+  Groups: GroupInstance[];
   getGroups(): Promise<any>;
   addGroup(group: GroupInstance): Promise<any>;
 }

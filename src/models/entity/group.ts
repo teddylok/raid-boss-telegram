@@ -14,6 +14,7 @@ export interface GroupAttribute {
 }
 
 export interface GroupInstance extends Sequelize.Instance<GroupAttribute>, GroupAttribute {
+  Users: UserInstance[];
   getUsers(): Promise<any>;
   addUser(user: UserInstance, options?: any): Promise<any>;
 }

@@ -34,5 +34,7 @@
   "date": "Date",
   "sync.sentTo": "You have published to",
   "illegalClickWarning": "Hey! Stop doing this, otherwise we will kick you out",
-  "map": "MAP"
+  "map": "MAP",
+  "header.updated": "Header updated",
+  "footer.updated": "Footer updated"
 }

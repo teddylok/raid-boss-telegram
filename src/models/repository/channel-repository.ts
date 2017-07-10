@@ -46,6 +46,8 @@ export class ChannelRepository {
     channel.createdAt = instance.created_at;
     channel.updatedAt = instance.updated_at;
     channel.deletedAt = instance.deleted_at;
+    channel.header = instance.header;
+    channel.footer = instance.footer;
 
     return channel;
   }
@@ -57,7 +59,9 @@ export class ChannelRepository {
       updated_at: channel.updatedAt,
       deleted_at: channel.deletedAt,
       name: channel.name,
-      channel_type_id: channel.channelTypeId
+      channel_type_id: channel.channelTypeId,
+      header: channel.header,
+      footer: channel.footer
     };
 
     return model;

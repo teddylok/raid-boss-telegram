@@ -17,6 +17,8 @@ export class Channel {
   name: string;
   boss: Boss[];
   channelTypeId: number;
+  header: string;
+  footer: string;
 
   constructor(bot: any, id: string, name: string, channelTypeId: number = Channel.CHANNEL_TYPE_ADMIN) {
     this.bot = bot;
@@ -116,11 +118,17 @@ export class Channel {
     const completed = this.getCompletedBoss();
     const battling = this.getBattleBoss();
     const pending = this.getPendingBoss();
+    const hr = '--------------------';
 
     let list: string = (description) ? `${description}\n\n` : '';
     list += `${i18n.t('today')} ${Emoji.get('four')} ${Emoji.get('star')} ${Emoji.get('hatching_chick')} \n`;
     list += `${i18n.t('date')}: ${Moment().format('YYYY-MM-DD')} \n`;
-    list += `===============\n`;
+    list += `${hr}\n`;
+
+    if (this.header && this.header !== '') {
+      list += `${this.header}\n`;
+      list += `${hr}\n`;
+    }
 
     // complete list
     list += `${Emoji.get('white_check_mark')}  ${i18n.t('list.completed')}\n`;
@@ -140,9 +148,14 @@ export class Channel {
       list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${this.getMapLink(boss)}\n`;
     });
 
-    list += `===============\n`;
+    list += `${hr}\n`;
     list += `${i18n.t('lastUpdated')}: ${Moment().format('HH:mm:ss')} \n`;
 
+    if (this.footer && this.footer !== '') {
+      list += `${hr}\n`;
+      list += `${this.footer}\n`;
+      list += `${hr}\n`;
+    }
     return list;
   }
 

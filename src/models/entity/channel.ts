@@ -1,6 +1,7 @@
 import * as Sequelize from 'sequelize';
 import { Sequelize as SequelizeInterface } from 'sequelize';
 import { ModelsInterface } from '../models';
+import { BossInstance } from "./boss";
 
 export interface ChannelAttribute {
   id: string;
@@ -9,9 +10,12 @@ export interface ChannelAttribute {
   deleted_at?: Date;
   name: string;
   channel_type_id: number;
+  header: string;
+  footer: string;
 }
 
 export interface ChannelInstance extends Sequelize.Instance<ChannelAttribute>, ChannelAttribute {
+  Bosses: BossInstance[];
 }
 
 export interface ChannelModel extends Sequelize.Model<ChannelInstance, ChannelAttribute> {
@@ -24,7 +28,9 @@ export function defineChannel<ChannelInstance, ChannelAttribute>(sequelize: Sequ
     updated_at: { type: Sequelize.DATE },
     deleted_at: { type: Sequelize.DATE },
     name: { type: Sequelize.STRING(50) },
-    channel_type_id: { type: Sequelize.INTEGER }
+    channel_type_id: { type: Sequelize.INTEGER },
+    header: { type: Sequelize.TEXT },
+    footer: { type: Sequelize.TEXT },
   }, {
     tableName: 'channels',
     timestamps: true,
