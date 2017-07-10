@@ -183,7 +183,8 @@ bot.onText(/\/list(.+)?/, (msg, match) => {
   bot.sendMessage(channel.id, channel.toString(_.trim(match[1])), {
     chat_id: msg.chat.id,
     message_id: msg.message_id,
-    parse_mode: 'Html'
+    parse_mode: 'Html',
+    disable_web_page_preview: true
   });
 });
 
