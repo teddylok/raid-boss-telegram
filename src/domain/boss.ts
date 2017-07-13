@@ -102,7 +102,7 @@ export class Boss {
 
     const timeSlots = new TimeSlots().getTimeSlots();
     _.map(timeSlots, timeSlot => {
-      list += `${timeSlot.emoji} *${timeSlot.text}*\n`;
+      list += `${timeSlot.emoji} <strong>${timeSlot.text}</strong>\n`;
       _.map(this.groups, (group: Group) => {
         list += `${group.toTimeSlotString(timeSlot.id)}\n`;
       });
