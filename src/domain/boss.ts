@@ -98,7 +98,7 @@ export class Boss {
   }
 
   toString() {
-    let list = `*${Moment(this.start).format('HH:mm')} ${this.location} ${this.getEmojiName()}*\n\n`;
+    let list = `<strong>${Moment(this.start).format('HH:mm')} ${this.location} ${this.getEmojiName()}</strong>\n\n`;
 
     const timeSlots = new TimeSlots().getTimeSlots();
     _.map(timeSlots, timeSlot => {
