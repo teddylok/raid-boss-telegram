@@ -63,7 +63,7 @@ bot.on('channel_post', (msg, match) => {
   if (_.toString(channelId) === _.toString(process.env.TAI_PO_RAID_ALERT_CHAT_ID)) {
     try {
       const data = JSON.parse(base64.decode(msg.text));
-      const hash = data[0];
+      const hash = `${Moment().valueOf()}.${data[0]}`;
       const gymName = data[1];
       const lat = _.toNumber(data[2]);
       const lng = _.toNumber(data[3]);
@@ -579,7 +579,7 @@ function loadChannels() {
 }
 
 function addBoss(channel: Channel, time: string, location: string, bossHash: string, gymName?: string, lat?: number, lng?: number, pokemonId?: number) {
-  const hash = (bossHash) ? bossHash : MD5(`${time}${location}`).toString();
+  const hash = (bossHash) ? bossHash : MD5(`${Moment().valueOf()}.${location}`).toString();
 
   const start = Moment();
   start.hour(_.toInteger(time.substring(0, 2)));
