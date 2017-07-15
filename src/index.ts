@@ -108,6 +108,7 @@ bot.on('channel_post', (msg, match) => {
       }
     } catch (err) {
       if (err.message !== 'Invalid character: the string to be decoded is not correctly encoded.') {
+        bot.sendMessage(channelId, `Error - import data from alert - ${err.message || ''} - ${msg.text}`);
         console.log(err);
       }
     }
