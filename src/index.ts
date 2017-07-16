@@ -63,10 +63,11 @@ bot.on('channel_post', (msg, match) => {
   if (_.toString(channelId) === _.toString(process.env.TAI_PO_RAID_ALERT_CHAT_ID)) {
     try {
       const data = JSON.parse(base64.decode(msg.text));
-      const hash = `${Moment().valueOf()}.${data[0]}`;
       const gymName = data[1];
       const lat = _.toNumber(data[2]);
       const lng = _.toNumber(data[3]);
+      const time = data[4];
+      const hash = `${Moment(time).valueOf()}.${data[0]}`;
       const level = _.toInteger(data[5]);
       const pokemonId = _.toInteger(data[6]);
       let boss = null;
@@ -84,7 +85,7 @@ bot.on('channel_post', (msg, match) => {
 
                   boss = targetChannel.getBossByHash(hash);
                   if (!boss) {
-                    return addBoss(targetChannel, Moment(data[4]).format('HH:mm'), `${address}`, hash, gymName, lat, lng, pokemonId);
+                    return addBoss(targetChannel, Moment(time).format('HH:mm'), `${address}`, hash, gymName, lat, lng, pokemonId);
                   } else {
                     return setBoss(targetChannel, boss.id, pokemonId);
                   }
@@ -579,7 +580,7 @@ function loadChannels() {
 }
 
 function addBoss(channel: Channel, time: string, location: string, bossHash: string, gymName?: string, lat?: number, lng?: number, pokemonId?: number) {
-  const hash = (bossHash) ? bossHash : MD5(`${Moment().valueOf()}.${location}`).toString();
+  const hash = (bossHash) ? bossHash : MD5(`${Moment(time).valueOf()}.${location}`).toString();
 
   const start = Moment();
   start.hour(_.toInteger(time.substring(0, 2)));
