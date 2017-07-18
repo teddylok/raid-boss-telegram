@@ -53,27 +53,27 @@ export class Channel {
   }
 
   getBoss() {
-    return _.filter(this.boss, (boss: Boss) => Moment(boss.start).format('YYYY-MM-DD') === Moment().format('YYYY-MM-DD'));
+    return _.filter(this.boss, (boss: Boss) => this.isTodayBoss(boss));
   }
 
   getCompletedBoss() {
-    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Time.now() > Moment(boss.start).add(1, 'hour') && Moment(boss.start).format('YYYY-MM-DD') === Moment().format('YYYY-MM-DD')), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Time.now() > Moment(boss.start).add(1, 'hour') && this.isTodayBoss(boss)), ['start']);
   }
 
   getBattleBoss() {
-    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && Time.now() > Moment(boss.start) && Moment(boss.start).format('YYYY-MM-DD') === Moment().format('YYYY-MM-DD')) , ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && Time.now() > Moment(boss.start) && this.isTodayBoss(boss)) , ['start']);
   }
 
   getPendingBoss() {
-    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start) >= Time.now() && Moment(boss.start).format('YYYY-MM-DD') === Moment().format('YYYY-MM-DD')), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start) >= Time.now() && this.isTodayBoss(boss)), ['start']);
   }
 
   getUpcomingBoss() {
-    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && Moment(boss.start).format('YYYY-MM-DD') === Moment().format('YYYY-MM-DD')), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && this.isTodayBoss(boss)), ['start']);
   }
 
   getBattleAndCompletedBoss() {
-    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Time.now() > Moment(boss.start) && Moment(boss.start).format('YYYY-MM-DD') === Moment().format('YYYY-MM-DD')), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Time.now() > Moment(boss.start) && this.isTodayBoss(boss)), ['start']);
   }
 
   getUpcomingBossList(callbackKey: string) {
@@ -112,6 +112,10 @@ export class Channel {
 
   setChannelType(channelTypeId: number) {
     this.channelTypeId = channelTypeId;
+  }
+
+  isTodayBoss(boss: Boss) {
+    return Moment(boss.start).format('YYYY-MM-DD') === Moment().format('YYYY-MM-DD');
   }
 
   toString(description?: string) {
