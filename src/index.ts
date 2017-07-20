@@ -730,7 +730,7 @@ function getUser(from, option?: string) {
 function getAddress(lat: number, lng: number) {
   return Request(`http://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&sensor=true&region=cn&language=zh-TW`)
     .then(response => {
-      let jsonData = JSON.parse(response);
+      const jsonData = JSON.parse(response);
       const route = _.find(jsonData.results[0].address_components, (component: any) => _.indexOf(component.types, 'route') >= 0);
       return (route) ? route.short_name : _.replace(jsonData.results[0].formatted_address, /香港|九龍|新界/g, '');
     });
