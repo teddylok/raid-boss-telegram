@@ -44,6 +44,17 @@ export class Pokedex {
       { id: 131, level: 4, name: 'Lapras', zhHkName: '背背龍', zhCnName: '', jaName: '', emoji: 'snowflake' },
       { id: 143, level: 4, name: 'Snorlax', zhHkName: '卡比獸', zhCnName: '', jaName: '', emoji: 'panda_face' },
       { id: 248, level: 4, name: 'Tyranitar', zhHkName: '班吉拉', zhCnName: '', jaName: '', emoji: 'hatched_chick' },
+      { id: 144, level: 5, name: 'Articuno', zhHkName: '急凍鳥', zhCnName: '', jaName: '', emoji: 'snowflake' },
+      { id: 145, level: 5, name: 'Zapdos', zhHkName: '雷鳥', zhCnName: '', jaName: '', emoji: 'zap' },
+      { id: 146, level: 5, name: 'Moltres', zhHkName: '火鳥', zhCnName: '', jaName: '', emoji: 'fire' },
+      { id: 150, level: 5, name: 'Mewtwo', zhHkName: '超夢夢', zhCnName: '', jaName: '', emoji: 'smiling_imp' },
+      { id: 151, level: 5, name: 'Mew', zhHkName: '夢夢', zhCnName: '', jaName: '', emoji: 'alien' },
+      { id: 249, level: 5, name: 'Lugia', zhHkName: '利基亞', zhCnName: '', jaName: '', emoji: 'bird' },
+      { id: 250, level: 5, name: 'Ho-Oh', zhHkName: '鳳凰', zhCnName: '', jaName: '', emoji: 'fire' },
+      { id: 251, level: 5, name: 'Celebi', zhHkName: '雪拉比', zhCnName: '', jaName: '', emoji: 'alien' },
+      { id: 243, level: 5, name: 'Raikou', zhHkName: '雷公', zhCnName: '', jaName: '', emoji: 'zap' },
+      { id: 244, level: 5, name: 'Entei', zhHkName: '炎帝', zhCnName: '', jaName: '', emoji: 'fire' },
+      { id: 245, level: 5, name: 'Suicune', zhHkName: '水君', zhCnName: '', jaName: '', emoji: 'droplet' },
     ];
 
     _.map(raidBosses, boss => {
