@@ -72,7 +72,7 @@ bot.on('channel_post', (msg, match) => {
       const pokemonId = _.toInteger(data[6]);
       let boss = null;
 
-      if (4 === level) {
+      if (4 === level || 5 === level) {
         syncChannelRepository
           .getByChannelId(channelId)
           .then((syncChannels: SyncChannelInstance[]) => {

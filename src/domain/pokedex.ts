@@ -72,7 +72,7 @@ export class Pokedex {
   }
 
   getPokemonByLevel(level: number) {
-    return _.filter(this.pokemons, (pokemon: Pokemon) => pokemon.level === level);
+    return _.filter(this.pokemons, (pokemon: Pokemon) => pokemon.level >= 4);
   }
 
   getPokemonById(id: number) {
