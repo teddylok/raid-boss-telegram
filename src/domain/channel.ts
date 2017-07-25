@@ -57,11 +57,11 @@ export class Channel {
   }
 
   getCompletedBoss() {
-    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Time.now() > Moment(boss.start).add(1, 'hour') && this.isTodayBoss(boss)), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Time.now() > Moment(boss.start).add(2, 'hour') && this.isTodayBoss(boss)), ['start']);
   }
 
   getBattleBoss() {
-    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && Time.now() > Moment(boss.start) && this.isTodayBoss(boss)) , ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start).add(2, 'hour') >= Time.now() && Time.now() > Moment(boss.start) && this.isTodayBoss(boss)) , ['start']);
   }
 
   getPendingBoss() {
@@ -69,7 +69,7 @@ export class Channel {
   }
 
   getUpcomingBoss() {
-    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start).add(1, 'hour') >= Time.now() && this.isTodayBoss(boss)), ['start']);
+    return _.sortBy(_.filter(this.getBoss(), (boss: Boss) => Moment(boss.start).add(2, 'hour') >= Time.now() && this.isTodayBoss(boss)), ['start']);
   }
 
   getBattleAndCompletedBoss() {
@@ -147,10 +147,10 @@ export class Channel {
     });
 
     // pending list
-    list += `\n${Emoji.get('alarm_clock')}  ${i18n.t('list.pending')}\n`;
-    _.map(pending, boss => {
-      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${this.getMapLink(boss)}\n`;
-    });
+    // list += `\n${Emoji.get('alarm_clock')}  ${i18n.t('list.pending')}\n`;
+    // _.map(pending, boss => {
+    //   list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${this.getMapLink(boss)}\n`;
+    // });
 
     list += `${hr}\n`;
     list += `${i18n.t('lastUpdated')}: ${Moment().format('HH:mm:ss')} \n`;

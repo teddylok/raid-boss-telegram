@@ -44,7 +44,7 @@ export class Pokedex {
       { id: 131, level: 4, name: 'Lapras', zhHkName: '背背龍', zhCnName: '', jaName: '', emoji: 'snowflake' },
       { id: 143, level: 4, name: 'Snorlax', zhHkName: '卡比獸', zhCnName: '', jaName: '', emoji: 'panda_face' },
       { id: 248, level: 4, name: 'Tyranitar', zhHkName: '班吉拉', zhCnName: '', jaName: '', emoji: 'hatched_chick' },
-      { id: 144, level: 5, name: 'Articuno', zhHkName: '急凍鳥', zhCnName: '', jaName: '', emoji: 'snowflake' },
+      { id: 144, level: 5, name: 'Articuno', zhHkName: '急凍鳥', zhCnName: '', jaName: '', emoji: 'snowman' },
       { id: 145, level: 5, name: 'Zapdos', zhHkName: '雷鳥', zhCnName: '', jaName: '', emoji: 'zap' },
       { id: 146, level: 5, name: 'Moltres', zhHkName: '火鳥', zhCnName: '', jaName: '', emoji: 'fire' },
       { id: 150, level: 5, name: 'Mewtwo', zhHkName: '超夢夢', zhCnName: '', jaName: '', emoji: 'smiling_imp' },
