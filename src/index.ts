@@ -442,7 +442,7 @@ bot.on('callback_query', (msg) => {
           .then(() => (++user.illegal_click_count >= 10) ?
             `${Emoji.get('middle_finger')} ${BotHelper.getFullName(msg.from)} ${Emoji.get('warning')} ${i18n.t('illegalClickWarning')}` :
             `${Emoji.get('middle_finger')} ${BotHelper.getFullName(msg.from)} ${i18n.t('noneOfYourBusiness')}`)
-          .then((message: string) => bot.sendMessage(chatId, message))
+          // .then((message: string) => bot.sendMessage(chatId, message))
           .then(() => user.save())
           .catch(err => console.log(err));
         break;
