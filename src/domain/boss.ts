@@ -88,7 +88,7 @@ export class Boss {
   }
 
   getTimeSlotList(callbackKey: string) {
-    const timeSlots = new TimeSlots().getTimeSlots();
+    const timeSlots = new TimeSlots().getTimeSlots(Moment(this.start));
     const keys = [];
     _.map(timeSlots, (timeSlot) => {
       keys.push({ text: timeSlot.text, callbackData: `${callbackKey}_${this.id}_${timeSlot.id}` });
@@ -100,7 +100,7 @@ export class Boss {
   toString() {
     let list = `<strong>${Moment(this.start).format('HH:mm')} ${this.location} ${this.getEmojiName()}</strong>\n\n`;
 
-    const timeSlots = new TimeSlots().getTimeSlots();
+    const timeSlots = new TimeSlots().getTimeSlots(Moment(this.start));
     _.map(timeSlots, timeSlot => {
       list += `${timeSlot.emoji} <strong>${timeSlot.text}</strong>\n`;
       _.map(this.groups, (group: Group) => {
