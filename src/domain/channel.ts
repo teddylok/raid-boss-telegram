@@ -147,10 +147,10 @@ export class Channel {
     });
 
     // pending list
-    // list += `\n${Emoji.get('alarm_clock')}  ${i18n.t('list.pending')}\n`;
-    // _.map(pending, boss => {
-    //   list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${this.getMapLink(boss)}\n`;
-    // });
+    list += `\n${Emoji.get('alarm_clock')}  ${i18n.t('list.pending')}\n`;
+    _.map(pending, boss => {
+      list += `${Moment(boss.start).format('HH:mm')}\t${boss.location} ${this.getMapLink(boss)}\n`;
+    });
 
     list += `${hr}\n`;
     list += `${i18n.t('lastUpdated')}: ${Moment().format('HH:mm:ss')} \n`;
